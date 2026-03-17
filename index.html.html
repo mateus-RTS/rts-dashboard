@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RTS Partners · Report Financeiro Fev/26</title>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --black:#1A1A1B;--green:#3D754E;--gl:#5a9e6f;--gl2:#a3d9b1;--ow:#F9F5EF;
+  --gray:#2e2e2f;--gray2:#3d3d3e;--muted:#a0a0a0;--border:rgba(255,255,255,0.08);
+  --warn:#f0b429;--danger:#f87171;--info:#60a5fa;
+}
+body{font-family:'Ubuntu',sans-serif;background:var(--black);color:var(--ow);min-height:100vh;}
+
+.nav{background:#111112;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.5rem;gap:2px;overflow-x:auto;position:sticky;top:0;z-index:100;}
+.nav-brand{display:flex;align-items:center;gap:10px;padding:10px 0;margin-right:1.5rem;flex-shrink:0;}
+.brand-logo{width:28px;height:28px;}
+.brand-name{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#fff;letter-spacing:.05em;line-height:1.2;}
+.brand-sub{font-size:9px;color:var(--muted);letter-spacing:.06em;margin-top:1px;}
+.tab{font-size:12px;font-weight:500;padding:14px 16px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;}
+.tab:hover{color:var(--ow);}
+.tab.active{color:#fff;border-bottom-color:var(--green);}
+.period{margin-left:auto;font-size:11px;background:var(--green);color:#fff;border-radius:4px;padding:3px 10px;flex-shrink:0;font-weight:500;}
+
+.page{display:none;padding:1.5rem;max-width:1200px;margin:0 auto;}
+.page.active{display:block;}
+
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.25rem;}
+.mc{background:var(--gray);border:1px solid var(--border);border-radius:8px;padding:1rem;}
+.mc-label{font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em;font-weight:300;}
+.mc-value{font-size:20px;font-weight:500;color:var(--ow);}
+.mc-note{font-size:11px;margin-top:4px;color:var(--muted);}
+.mc-up .mc-value{color:var(--gl);}
+.mc-up2 .mc-value{color:var(--gl2);}
+.mc-warn .mc-value,.mc-warn .mc-note{color:var(--warn);}
+.mc-down .mc-value,.mc-down .mc-note{color:var(--danger);}
+
+.row2{display:grid;grid-template-columns:1.5fr 1fr;gap:12px;margin-bottom:12px;}
+.row2e{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.row1{margin-bottom:12px;}
+
+.card{background:var(--gray);border:1px solid var(--border);border-radius:8px;padding:1.1rem;}
+.card-title{font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;}
+.card-sub{font-size:11px;color:var(--muted);margin-bottom:.9rem;font-weight:300;}
+.gbar{width:24px;height:3px;background:var(--green);border-radius:2px;margin-bottom:7px;}
+
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+.li{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);}
+.ld{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.ld-line{width:14px;height:2px;border-radius:2px;flex-shrink:0;}
+
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{text-align:left;padding:5px 8px;color:var(--muted);font-weight:400;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.04em;}
+th:not(:first-child){text-align:right;}
+td{padding:6px 8px;color:var(--ow);border-bottom:1px solid rgba(255,255,255,0.04);}
+td:not(:first-child){text-align:right;}
+tr:last-child td{border-bottom:none;}
+.tr-total td{color:var(--gl);font-weight:500;border-top:1px solid var(--green);}
+
+.note{font-size:11px;color:var(--muted);border-left:2px solid var(--green);padding:5px 10px;margin-top:10px;line-height:1.5;}
+.warn-note{font-size:11px;color:var(--warn);border-left:2px solid var(--warn);padding:5px 10px;margin-top:10px;line-height:1.5;}
+
+.ctabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;}
+.ctab{font-size:11px;padding:3px 10px;border-radius:4px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--muted);font-family:'Ubuntu',sans-serif;transition:all .15s;}
+.ctab:hover{color:var(--ow);}
+.ctab.active{background:var(--green);color:#fff;border-color:var(--green);font-weight:500;}
+.ctab-content{display:none;}
+.ctab-content.active{display:block;}
+
+/* ACCORDION */
+.acc-group{border-bottom:1px solid rgba(255,255,255,0.04);}
+.acc-header{display:flex;align-items:center;justify-content:space-between;padding:9px 8px;cursor:pointer;border-radius:4px;transition:background .12s;}
+.acc-header:hover{background:rgba(255,255,255,0.04);}
+.acc-left{display:flex;align-items:center;gap:8px;}
+.acc-name{font-size:12px;font-weight:500;color:var(--ow);}
+.acc-arrow{font-size:9px;color:var(--muted);transition:transform .2s;flex-shrink:0;}
+.acc-arrow.open{transform:rotate(90deg);}
+.acc-vals{display:flex;gap:16px;align-items:center;}
+.acc-val{font-size:12px;text-align:right;min-width:72px;}
+.acc-var{font-size:10px;padding:1px 7px;border-radius:99px;font-weight:500;min-width:44px;text-align:center;}
+.v-pos{background:rgba(90,158,111,.2);color:var(--gl);}
+.v-neg{background:rgba(248,113,113,.15);color:var(--danger);}
+.v-neu{background:rgba(160,160,160,.15);color:var(--muted);}
+.acc-body{display:none;padding:2px 0 4px 22px;}
+.acc-body.open{display:block;}
+.acc-sub{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:4px;}
+.acc-sub:hover{background:rgba(255,255,255,0.03);}
+.acc-sub-name{font-size:11px;color:var(--muted);}
+.acc-sub-vals{display:flex;gap:16px;}
+.acc-sub-val{font-size:11px;color:var(--muted);text-align:right;min-width:72px;}
+.acc-col-heads{display:flex;justify-content:flex-end;gap:16px;padding:4px 8px;margin-bottom:2px;border-bottom:1px solid var(--border);}
+.acc-col-head{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;min-width:72px;text-align:right;}
+.acc-col-head:last-child{min-width:44px;text-align:center;}
+
+.diff{display:inline-block;font-size:10px;padding:1px 6px;border-radius:99px;font-weight:500;}
+.diff-pos{background:rgba(90,158,111,.2);color:var(--gl);}
+.diff-neg{background:rgba(248,113,113,.15);color:var(--danger);}
+
+/* PACE BARS */
+.pace-section{background:var(--gray);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+.pace-header{padding:1rem 1.1rem .75rem;}
+.pace-body{padding:0 1.1rem 1rem;}
+.banker-row{margin-bottom:.9rem;}
+.banker-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;flex-wrap:wrap;gap:4px;}
+.banker-name{font-size:12px;font-weight:500;color:var(--ow);}
+.banker-vals{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.bv{font-size:11px;color:var(--muted);}
+.bv strong{color:var(--ow);font-weight:500;}
+.pace-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:99px;}
+.p-ok  {background:rgba(90,158,111,.2); color:var(--gl);}
+.p-warn{background:rgba(240,180,41,.18);color:var(--warn);}
+.p-low {background:rgba(248,113,113,.15);color:var(--danger);}
+.bar-outer{position:relative;height:22px;margin-bottom:3px;}
+.bar-track{height:100%;background:rgba(255,255,255,0.06);border-radius:6px;overflow:hidden;display:flex;}
+.seg-jan{height:100%;background:var(--gl);}
+.seg-fev{height:100%;background:var(--green);border-radius:0 6px 6px 0;}
+.marker{position:absolute;top:-3px;height:calc(100% + 6px);width:2px;border-radius:2px;}
+.m-pace{background:var(--warn);}
+.m-meta{background:rgba(255,255,255,0.18);}
+.m-label{position:absolute;top:-17px;font-size:9px;white-space:nowrap;transform:translateX(-50%);font-weight:500;}
+.bar-sub{display:flex;justify-content:space-between;margin-top:2px;}
+.bar-pct{font-size:10px;color:var(--muted);}
+.pace-divider{height:1px;background:var(--border);margin:.75rem 0;}
+.total-block{background:rgba(61,117,78,0.1);border:1px solid rgba(61,117,78,0.22);border-radius:6px;padding:.85rem 1rem;}
+.total-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;flex-wrap:wrap;gap:6px;}
+.total-bar-outer{position:relative;height:12px;}
+.total-track{height:100%;background:rgba(255,255,255,0.06);border-radius:6px;overflow:hidden;display:flex;}
+.total-sub{display:flex;justify-content:space-between;margin-top:4px;}
+
+/* DRILL DOWN */
+.drill-divider{display:flex;align-items:center;gap:10px;margin:12px 0 10px;opacity:0;transition:opacity .25s;}
+.drill-divider.visible{opacity:1;}
+.drill-line{flex:1;height:1px;background:rgba(255,255,255,0.1);}
+.drill-label{font-size:11px;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:6px;}
+.drill-pill{font-size:11px;font-weight:500;padding:2px 10px;border-radius:4px;color:#fff;}
+.bottom-wrap{max-height:0;overflow:hidden;transition:max-height .4s ease;}
+.bottom-wrap.open{max-height:320px;}
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-top:4px;}
+.bottom-chart{position:relative;width:100%;height:230px;}
+.hint{font-size:11px;color:var(--gl);margin-bottom:.85rem;}
+
+/* MINI TABLE (drill) */
+.mini-tbl table{width:100%;border-collapse:collapse;font-size:11px;}
+.mini-tbl th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:400;padding:4px 6px;border-bottom:1px solid var(--border);text-align:right;}
+.mini-tbl th:first-child{text-align:left;}
+.mini-tbl td{padding:5px 6px;color:var(--ow);border-bottom:1px solid rgba(255,255,255,0.04);text-align:right;}
+.mini-tbl td:first-child{text-align:left;color:var(--muted);}
+.mini-tbl tr:last-child td{border-bottom:none;}
+.mini-tbl .tr-tot td{color:var(--gl);font-weight:500;border-top:1px solid var(--green);}
+.zero{color:#3d3d3e !important;}
+
+/* PROGRESS */
+.prog-wrap{margin-bottom:10px;}
+.prog-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.prog-name{font-size:12px;color:var(--ow);font-weight:500;}
+.prog-val{font-size:11px;color:var(--muted);}
+.prog-bar{background:var(--gray2);border-radius:4px;height:8px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:4px;background:var(--green);}
+.prog-fill.low{background:var(--danger);}
+.prog-fill.mid{background:var(--warn);}
+
+@media(max-width:700px){
+  .row2,.row2e{grid-template-columns:1fr;}
+  .metrics{grid-template-columns:repeat(2,1fr);}
+  .acc-vals{display:none;}
+  .bottom-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-brand">
+    <svg class="brand-logo" viewBox="0 0 167 158" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M164.94 60.9413C165.903 61.6542 166.298 62.904 165.921 64.0416L135.811 154.472L135.486 155.452C135.106 156.593 134.034 157.357 132.833 157.348L131.855 157.342L33.2545 156.65H32.7288C31.5255 156.638 30.462 155.859 30.1004 154.712L29.9576 154.257L0.145566 60.4256L0.127335 60.371C-0.231224 59.2425 0.185069 58.0109 1.15439 57.3283L81.7389 0.591546L82.5775 0L83.3676 0.591546L122.441 29.7563L121.986 31.2002L82.5775 3.4249L6.04962 60.5925L35.7462 149.707L128.801 149.051L158.364 56.0724L164.94 60.9383V60.9413Z" fill="white"/>
+      <path d="M150.858 50.5225L122.353 135.981L122.025 136.967C121.645 138.108 120.569 138.872 119.363 138.86L118.394 138.851L46.7062 138.159L46.1714 138.153C44.9681 138.141 43.9107 137.358 43.5521 136.212L43.4124 135.766L21.9171 67.4892L21.8928 67.4164C21.5373 66.2909 21.9566 65.0684 22.9259 64.3919L81.7386 23.4479L81.7781 23.4206C82.2582 23.0838 82.8994 23.096 83.3673 23.4479L116.561 48.3322L116.096 49.7974L82.5803 26.2843L27.8211 67.6409L49.1949 131.209L115.343 130.572L142.669 44.4614L150.861 50.5225H150.858Z" fill="rgba(255,255,255,0.65)"/>
+      <path d="M134.058 38.0893L107.947 116.188L107.615 117.183C107.233 118.33 106.148 119.095 104.938 119.076L103.99 119.061L61.1184 118.37L60.5592 118.36C59.359 118.342 58.3076 117.554 57.9551 116.407C55.6275 108.835 47.5022 82.434 45.1929 74.9259C44.8495 73.8126 45.2749 72.6082 46.2412 71.953L81.7446 47.915L81.8053 47.8725C82.2824 47.5479 82.9144 47.5661 83.3733 47.915L110.265 68.2338L109.806 69.6808L82.6015 50.7544L51.1364 75.1655L63.5857 111.401L100.93 110.798L125.872 32.0312L134.064 38.0893H134.058Z" fill="rgba(255,255,255,0.35)"/>
+    </svg>
+    <div>
+      <div class="brand-name">RTS PARTNERS</div>
+      <div class="brand-sub">WEALTH MANAGEMENT</div>
+    </div>
+  </div>
+  <div class="tab active" onclick="showPage('visao',this)">Visão Geral</div>
+  <div class="tab" onclick="showPage('receita',this)">Receita</div>
+  <div class="tab" onclick="showPage('custos',this)">Custos</div>
+  <div class="tab" onclick="showPage('captacao',this)">Captação</div>
+  <div class="tab" onclick="showPage('bankers',this)">Bankers</div>
+  <span class="period">Fev/26</span>
+</div>
+
+<!-- ===== ABA 1: VISÃO GERAL ===== -->
+<div id="page-visao" class="page active">
+  <div class="metrics">
+    <div class="mc mc-up"><div class="mc-label">AUM Custódia</div><div class="mc-value">R$ 582MM</div><div class="mc-note">▲ 2,6% vs Jan/26</div></div>
+    <div class="mc mc-up"><div class="mc-label">Receita Líquida</div><div class="mc-value">R$ 156K</div><div class="mc-note">▲ 4,1% vs Jan/26</div></div>
+    <div class="mc mc-up2"><div class="mc-label">Lucro Líquido</div><div class="mc-value">R$ 73,9K</div><div class="mc-note">▲ 1,8% vs Jan/26</div></div>
+    <div class="mc mc-warn" id="mc-margem"><div class="mc-label">Margem Líquida</div><div class="mc-value" id="margem-val">47,4%</div><div class="mc-note">⚠ Abaixo de 50%</div></div>
+    <div class="mc"><div class="mc-label">ROA Consultoria</div><div class="mc-value">0,41%</div><div class="mc-note">Orçado: 0,45%</div></div>
+    <div class="mc"><div class="mc-label">Caixa RTS</div><div class="mc-value">R$ 194K</div><div class="mc-note">Dez/25: R$ 284K</div></div>
+  </div>
+  <div class="row2">
+    <div class="card">
+      <div class="gbar"></div>
+      <div class="card-title">AUM — Realizado vs Orçado</div>
+      <div class="card-sub">R$ MM · Dez/25, Jan/26, Fev/26</div>
+      <div class="legend">
+        <span class="li"><span class="ld" style="background:#3D754E;"></span>Realizado</span>
+        <span class="li"><span class="ld" style="background:rgba(240,180,41,0.35);border:1px solid #f0b429;"></span>Orçado</span>
+      </div>
+      <div style="position:relative;width:100%;height:220px;"><canvas id="aumOrcChart"></canvas></div>
+      <div class="note">Fev/26: R$582MM realizado vs R$597,5MM orçado — gap de -2,6%.</div>
+    </div>
+    <div class="card">
+      <div class="gbar"></div>
+      <div class="card-title">ROA — Realizado vs Orçado</div>
+      <div class="card-sub">ROA Consultoria · Jan/26 e Fev/26</div>
+      <div style="position:relative;width:100%;height:220px;"><canvas id="roaOrcChart"></canvas></div>
+      <div class="warn-note">⚠ ROA abaixo do orçado nos dois meses. Meta: 0,45%.</div>
+    </div>
+  </div>
+  <div class="row2e">
+    <div class="card">
+      <div class="gbar"></div>
+      <div class="card-title">Receita Líquida vs Lucro Líquido</div>
+      <div class="card-sub">Dez/25, Jan/26 e Fev/26 em R$K</div>
+      <div class="legend">
+        <span class="li"><span class="ld" style="background:#3D754E;"></span>Receita Líquida</span>
+        <span class="li"><span class="ld" style="background:#a3d9b1;"></span>Lucro Líquido</span>
+      </div>
+      <div style="position:relative;width:100%;height:200px;"><canvas id="recLucroChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="gbar"></div>
+      <div class="card-title">Margem Líquida %</div>
+      <div class="card-sub">Realizado vs Orçado · linha vermelha = limite 40%</div>
+      <div style="position:relative;width:100%;height:200px;"><canvas id="margemChart"></canvas></div>
+      <div class="warn-note">⚠ Margem Fev/26: 47,4% — abaixo da meta de 58,2%.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ABA 2: RECEITA ===== -->
+<div id="page-receita" class="page">
+  <div class="metrics">
+    <div class="mc mc-up"><div class="mc-label">Receita Total Fev</div><div class="mc-value">R$ 186K</div><div class="mc-note">▲ 4,1% vs Jan</div></div>
+    <div class="mc"><div class="mc-label">Consultoria RTS</div><div class="mc-value">R$ 157K</div><div class="mc-note">84% da receita total</div></div>
+    <div class="mc"><div class="mc-label">Cross-sell AUGE</div><div class="mc-value">R$ 21,2K</div><div class="mc-note">11% da receita total</div></div>
+    <div class="mc"><div class="mc-label">Receita / DU</div><div class="mc-value">R$ 7.482</div><div class="mc-note">▲ +3,8% real vs Jan</div></div>
+    <div class="mc mc-warn"><div class="mc-label">Campanha BTG</div><div class="mc-value">R$ 0</div><div class="mc-note">⚠ Sem campanha Fev</div></div>
+  </div>
+
+  <!-- Card DU -->
+  <div class="card row1" style="border-left:3px solid var(--info);border-radius:8px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div class="gbar" style="background:var(--info);margin:0;flex-shrink:0;"></div>
+      <span class="card-title" style="margin:0;color:var(--info);">Receita por Dia Útil — análise de crescimento real</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;">
+      <div style="background:var(--gray2);border-radius:6px;padding:.75rem;">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Jan/26 — 22 DU</div>
+        <div style="font-size:18px;font-weight:500;">R$ 7.211</div>
+        <div style="font-size:11px;color:var(--muted);">por dia útil</div>
+      </div>
+      <div style="background:var(--gray2);border-radius:6px;padding:.75rem;">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Fev/26 — 21 DU</div>
+        <div style="font-size:18px;font-weight:500;color:var(--gl);">R$ 7.482</div>
+        <div style="font-size:11px;color:var(--gl);">▲ +3,8% crescimento real</div>
+      </div>
+      <div style="background:var(--gray2);border-radius:6px;padding:.75rem;">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Interpretação</div>
+        <div style="font-size:12px;font-weight:500;color:var(--gl);line-height:1.5;">Receita total similar com 1 DU a menos — crescimento real confirmado</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Receita RTS + AUGE drill -->
+  <div class="row2e">
+    <div class="card">
+      <div class="gbar"></div>
+      <div class="card-title">RTS — Consultoria e Rec. Financeira</div>
+      <div class="card-sub">Jan e Fev/26 · DU é análise separada, não soma aqui</div>
+      <div class="legend">
+        <span class="li"><span class="ld" style="background:#3D754E;"></span>Consultoria</span>
+        <span class="li"><span class="ld" style="background:#60a5fa;"></span>Rec. Financeira</span>
+      </div>
+      <div style="position:relative;width:100%;height:210px;"><canvas id="recRtsChart"></canvas></div>
+    </div>
+
+    <!-- AUGE DRILL -->
+    <div class="card">
+      <div class="gbar"></div>
+      <div class="card-title">AUGE — Cross-sell por linha de negócio</div>
+      <div class="card-sub">Jan e Fev/26 · dados reais da planilha</div>
+      <div class="hint">↓ Clique em uma linha para ver breakdown por banker</div>
+      <div class="legend">
+        <span class="li"><span class="ld" style="background:rgba(61,117,78,0.45);"></span>Jan/26</span>
+        <span class="li"><span class="ld" style="background:#f0b429;"></span>Fev/26</span>
+      </div>
+      <div style="position:relative;width:100%;height:170px;"><canvas id="augeTop"></canvas></div>
+      <div class="drill-divider" id="augeDivider">
+        <div class="drill-line"></div>
+        <div class="drill-label">Breakdown: <span class="drill-pill" id="augePill">—</span></div>
+        <div class="drill-line"></div>
+      </div>
+      <div class="bottom-wrap" id="augeBotWrap">
+        <div class="bottom-grid">
+          <div style="position:relative;width:100%;height:200px;"><canvas id="augeBot"></canvas></div>
+          <div class="mini-tbl" id="augeMiniTable"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela por banker -->
+  <div class="card row1">
+    <div class="gbar"></div>
+    <div class="card-title">Receita por Banker — Fev/26</div>
+    <div class="card-sub">Detalhado por linha de produto</div>
+    <div class="ctabs">
+      <button class="ctab active" onclick="showCtab('rec','all',this)">Todos</button>
+      <button class="ctab" onclick="showCtab('rec','mj',this)">MJ</button>
+      <button class="ctab" onclick="showCtab('rec','dn',this)">DN</button>
+      <button class="ctab" onclick="showCtab('rec','ri',this)">RI</button>
+      <button class="ctab" onclick="showCtab('rec','nc',this)">NC</button>
+    </div>
+    <div id="rec-all" class="ctab-content active">
+      <table><thead><tr><th>Banker</th><th>Consultoria</th><th>Cons. DU</th><th>Cross-sell</th><th>Total Fev</th><th>vs Jan</th></tr></thead>
+      <tbody>
+        <tr><td>MJ</td><td>R$ 51.151</td><td>R$ 2.436</td><td>R$ 7.921</td><td>R$ 61.508</td><td><span class="diff diff-pos">▲ 12%</span></td></tr>
+        <tr><td>RI</td><td>R$ 47.812</td><td>R$ 2.277</td><td>—</td><td>R$ 50.089</td><td><span class="diff diff-pos">▲ 6%</span></td></tr>
+        <tr><td>DN</td><td>R$ 37.124</td><td>R$ 1.768</td><td>—</td><td>R$ 38.892</td><td><span class="diff diff-neg">▼ 13%</span></td></tr>
+        <tr><td>NC</td><td>R$ 21.030</td><td>R$ 1.001</td><td>R$ 13.300</td><td>R$ 34.201</td><td><span class="diff diff-neg">▼ 5%</span></td></tr>
+        <tr class="tr-total"><td>Total</td><td>R$ 157.117</td><td>R$ 7.482</td><td>R$ 21.221</td><td>R$ 184.690</td><td><span class="diff diff-pos">▲ 4%</span></td></tr>
+      </tbody></table>
+    </div>
+    <div id="rec-mj" class="ctab-content"><table><thead><tr><th>Linha</th><th>Jan/26</th><th>Fev/26</th><th>1T26</th></tr></thead><tbody>
+      <tr><td>Consultoria</td><td>R$ 49.099</td><td>R$ 51.151</td><td>R$ 100.251</td></tr>
+      <tr><td>Cross-sell</td><td>R$ 3.635</td><td>R$ 7.921</td><td>R$ 11.556</td></tr>
+      <tr><td>Cons. DU</td><td>R$ 2.232</td><td>R$ 2.436</td><td>R$ 2.436</td></tr>
+      <tr class="tr-total"><td>Total</td><td>R$ 54.966</td><td>R$ 61.508</td><td>R$ 114.243</td></tr>
+    </tbody></table></div>
+    <div id="rec-dn" class="ctab-content"><table><thead><tr><th>Linha</th><th>Jan/26</th><th>Fev/26</th><th>1T26</th></tr></thead><tbody>
+      <tr><td>Consultoria</td><td>R$ 39.129</td><td>R$ 37.124</td><td>R$ 76.253</td></tr>
+      <tr><td>Outros</td><td>R$ 3.533</td><td>—</td><td>R$ 3.533</td></tr>
+      <tr><td>Cons. DU</td><td>R$ 1.779</td><td>R$ 1.768</td><td>R$ 1.768</td></tr>
+      <tr class="tr-total"><td>Total</td><td>R$ 44.441</td><td>R$ 38.892</td><td>R$ 81.554</td></tr>
+    </tbody></table></div>
+    <div id="rec-ri" class="ctab-content"><table><thead><tr><th>Linha</th><th>Jan/26</th><th>Fev/26</th><th>1T26</th></tr></thead><tbody>
+      <tr><td>Consultoria</td><td>R$ 45.241</td><td>R$ 47.812</td><td>R$ 93.053</td></tr>
+      <tr><td>Cons. DU</td><td>R$ 2.056</td><td>R$ 2.277</td><td>R$ 2.277</td></tr>
+      <tr class="tr-total"><td>Total</td><td>R$ 47.297</td><td>R$ 50.089</td><td>R$ 95.330</td></tr>
+    </tbody></table></div>
+    <div id="rec-nc" class="ctab-content"><table><thead><tr><th>Linha</th><th>Jan/26</th><th>Fev/26</th><th>1T26</th></tr></thead><tbody>
+      <tr><td>Consultoria</td><td>R$ 25.170</td><td>R$ 21.030</td><td>R$ 46.199</td></tr>
+      <tr><td>IDB (Câmbio)</td><td>R$ 9.745</td><td>R$ 12.170</td><td>R$ 21.915</td></tr>
+      <tr><td>Cons. DU</td><td>R$ 1.144</td><td>R$ 1.001</td><td>R$ 1.001</td></tr>
+      <tr class="tr-total"><td>Total</td><td>R$ 36.059</td><td>R$ 34.201</td><td>R$ 69.373</td></tr>
+    </tbody></table></div>
+  </div>
+</div>
+
+<!-- ===== ABA 3: CUSTOS ===== -->
+<div id="page-custos" class="page">
+  <div class="metrics">
+    <div class="mc mc-down"><div class="mc-label">Custo Total Fev</div><div class="mc-value">R$ 82,1K</div><div class="mc-note">▲ 6,4% vs Jan</div></div>
+    <div class="mc mc-down"><div class="mc-label">vs Orçado</div><div class="mc-value">+R$ 1,8K</div><div class="mc-note">Orçado: R$ 80,3K</div></div>
+    <div class="mc"><div class="mc-label">Pessoas</div><div class="mc-value">R$ 29,2K</div><div class="mc-note">Orçado: R$ 29,8K</div></div>
+    <div class="mc mc-down"><div class="mc-label">Desp. Administrativas</div><div class="mc-value">R$ 25,7K</div><div class="mc-note">⚠ +37% vs orçado</div></div>
+    <div class="mc"><div class="mc-label">Sistemas</div><div class="mc-value">R$ 12K</div><div class="mc-note">Em linha c/ orçado</div></div>
+    <div class="mc"><div class="mc-label">Consolidação</div><div class="mc-value">R$ 12,1K</div><div class="mc-note">Orçado: R$ 14,2K</div></div>
+  </div>
+  <div class="row2e">
+    <div class="card">
+      <div class="gbar"></div>
+      <div class="card-title">Custos — Realizado vs Orçado</div>
+      <div class="card-sub">Fev/26 por grupo</div>
+      <div class="legend">
+        <span class="li"><span class="ld" style="background:#3D754E;"></span>Realizado</span>
+        <span class="li"><span class="ld" style="background:rgba(240,180,41,0.35);border:1px solid #f0b429;"></span>Orçado</span>
+      </div>
+      <div style="position:relative;width:100%;height:250px;"><canvas id="custosChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="gbar"></div>
+      <div class="card-title">Variação % vs Orçado — Fev/26</div>
+      <div class="card-sub">Positivo = abaixo do orçado (favorável)</div>
+      <div style="position:relative;width:100%;height:250px;"><canvas id="varChart"></canvas></div>
+    </div>
+  </div>
+  <div class="card row1">
+    <div class="gbar"></div>
+    <div class="card-title">Detalhamento por grupo — clique para expandir</div>
+    <div class="card-sub">Realizado vs Orçado · Fev/26</div>
+    <div class="acc-col-heads">
+      <span class="acc-col-head">Real Fev</span>
+      <span class="acc-col-head">Orc Fev</span>
+      <span class="acc-col-head">Var %</span>
+    </div>
+    <div class="acc-group">
+      <div class="acc-header" onclick="toggleAcc('comercial')"><div class="acc-left"><span class="acc-arrow" id="arr-comercial">▶</span><span class="acc-name">Despesa Comercial</span></div>
+      <div class="acc-vals"><span class="acc-val">-R$ 1.535</span><span class="acc-val">-R$ 4.000</span><span class="acc-var v-pos">+61%</span></div></div>
+      <div class="acc-body" id="body-comercial">
+        <div class="acc-sub"><span class="acc-sub-name">Relacionamento Clientes</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.535</span><span class="acc-sub-val">-R$ 4.000</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">Brindes</span><div class="acc-sub-vals"><span class="acc-sub-val">R$ 0</span><span class="acc-sub-val">R$ 0</span></div></div>
+      </div>
+    </div>
+    <div class="acc-group">
+      <div class="acc-header" onclick="toggleAcc('adm')"><div class="acc-left"><span class="acc-arrow" id="arr-adm">▶</span><span class="acc-name">Despesas Administrativas</span></div>
+      <div class="acc-vals"><span class="acc-val">-R$ 25.738</span><span class="acc-val">-R$ 18.800</span><span class="acc-var v-neg">-37%</span></div></div>
+      <div class="acc-body" id="body-adm">
+        <div class="acc-sub"><span class="acc-sub-name">Custo escritório</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 22.235</span><span class="acc-sub-val">-R$ 14.300</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name" style="padding-left:14px;">↳ Aluguel (pacote)</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 13.425</span><span class="acc-sub-val">-R$ 11.700</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name" style="padding-left:14px;">↳ Manutenção / Materiais</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 8.810</span><span class="acc-sub-val">-R$ 2.600</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">Contabilidade</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 3.100</span><span class="acc-sub-val">-R$ 3.500</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">Jurídico</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 403</span><span class="acc-sub-val">-R$ 1.000</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">Marketing</span><div class="acc-sub-vals"><span class="acc-sub-val">R$ 0</span><span class="acc-sub-val">R$ 0</span></div></div>
+      </div>
+    </div>
+    <div class="acc-group">
+      <div class="acc-header" onclick="toggleAcc('sistemas')"><div class="acc-left"><span class="acc-arrow" id="arr-sistemas">▶</span><span class="acc-name">Sistemas</span></div>
+      <div class="acc-vals"><span class="acc-val">-R$ 12.029</span><span class="acc-val">-R$ 12.050</span><span class="acc-var v-neu">0%</span></div></div>
+      <div class="acc-body" id="body-sistemas">
+        <div class="acc-sub"><span class="acc-sub-name">PBI</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.042</span><span class="acc-sub-val">-R$ 1.200</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">Notion</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 673</span><span class="acc-sub-val">-R$ 1.000</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">Google</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.176</span><span class="acc-sub-val">-R$ 1.300</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">Mycapital</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 213</span><span class="acc-sub-val">-R$ 250</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">Outros (Mais retorno, Adapta, Canva)</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.647</span><span class="acc-sub-val">-R$ 1.500</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">IaaS</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.703</span><span class="acc-sub-val">-R$ 1.500</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">AWS</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 3.919</span><span class="acc-sub-val">-R$ 3.500</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">BPO Financeiro</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.656</span><span class="acc-sub-val">-R$ 1.800</span></div></div>
+      </div>
+    </div>
+    <div class="acc-group">
+      <div class="acc-header" onclick="toggleAcc('consol')"><div class="acc-left"><span class="acc-arrow" id="arr-consol">▶</span><span class="acc-name">Consolidação</span></div>
+      <div class="acc-vals"><span class="acc-val">-R$ 12.094</span><span class="acc-val">-R$ 14.157</span><span class="acc-var v-pos">+17%</span></div></div>
+      <div class="acc-body" id="body-consol">
+        <div class="acc-sub"><span class="acc-sub-name">Regência</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 6.192</span><span class="acc-sub-val">-R$ 8.307</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">Comdinheiro</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 5.902</span><span class="acc-sub-val">-R$ 5.850</span></div></div>
+      </div>
+    </div>
+    <div class="acc-group">
+      <div class="acc-header" onclick="toggleAcc('estrategia')"><div class="acc-left"><span class="acc-arrow" id="arr-estrategia">▶</span><span class="acc-name">Estratégia</span></div>
+      <div class="acc-vals"><span class="acc-val">-R$ 1.500</span><span class="acc-val">-R$ 1.500</span><span class="acc-var v-neu">0%</span></div></div>
+      <div class="acc-body" id="body-estrategia">
+        <div class="acc-sub"><span class="acc-sub-name">Gestão - Infraestrutura</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.500</span><span class="acc-sub-val">-R$ 1.500</span></div></div>
+      </div>
+    </div>
+    <div class="acc-group">
+      <div class="acc-header" onclick="toggleAcc('pessoas')"><div class="acc-left"><span class="acc-arrow" id="arr-pessoas">▶</span><span class="acc-name">Pessoas</span></div>
+      <div class="acc-vals"><span class="acc-val">-R$ 29.194</span><span class="acc-val">-R$ 29.750</span><span class="acc-var v-pos">+2%</span></div></div>
+      <div class="acc-body" id="body-pessoas">
+        <div class="acc-sub"><span class="acc-sub-name">Plano de saúde</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 5.554</span><span class="acc-sub-val">-R$ 6.750</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">Salário</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 23.640</span><span class="acc-sub-val">-R$ 23.000</span></div></div>
+        <div class="acc-sub"><span class="acc-sub-name">Floor Bankers</span><div class="acc-sub-vals"><span class="acc-sub-val">R$ 0</span><span class="acc-sub-val">R$ 0</span></div></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 8px;border-top:1px solid var(--green);margin-top:4px;">
+      <span style="font-size:12px;font-weight:500;color:var(--gl);">Custo Total</span>
+      <div class="acc-vals"><span class="acc-val" style="color:var(--gl);">-R$ 82.089</span><span class="acc-val" style="color:var(--gl);">-R$ 80.257</span><span class="acc-var v-neg">-2%</span></div>
+    </div>
+    <div class="warn-note">⚠ Principal desvio: Desp. Administrativas +37% — manutenção/materiais acima do previsto.</div>
+  </div>
+</div>
+
+<!-- ===== ABA 4: CAPTAÇÃO ===== -->
+<div id="page-captacao" class="page">
+  <div class="metrics">
+    <div class="mc mc-up"><div class="mc-label">Captação Total YTD</div><div class="mc-value">R$ 45,4MM</div><div class="mc-note">Meta: R$ 400MM</div></div>
+    <div class="mc"><div class="mc-label">% da Meta Anual</div><div class="mc-value">11,4%</div><div class="mc-note">2 meses de 12</div></div>
+    <div class="mc mc-up"><div class="mc-label">Melhor Fev/26</div><div class="mc-value">MJ — R$12,8MM</div><div class="mc-note">Maior do mês</div></div>
+    <div class="mc"><div class="mc-label">Meta Mensal/Banker</div><div class="mc-value">R$ 8,3MM</div><div class="mc-note">R$100MM ÷ 12</div></div>
+    <div class="mc mc-warn"><div class="mc-label">Gap para Meta</div><div class="mc-value">R$ 354,6MM</div><div class="mc-note">Restam 10 meses</div></div>
+  </div>
+  <div class="pace-section">
+    <div class="pace-header">
+      <div class="card-title">Captação por Banker — Pace vs Meta Anual</div>
+      <div class="card-sub" style="margin-bottom:.5rem;">R$100MM/banker · R$8,3MM/mês · linha amarela = pace esperado (2 meses)</div>
+      <div class="legend" style="margin-bottom:0;">
+        <span class="li"><span class="ld" style="background:#5a9e6f;"></span>Jan/26</span>
+        <span class="li"><span class="ld" style="background:#3D754E;"></span>Fev/26</span>
+        <span class="li"><div class="ld-line" style="background:#f0b429;"></div>Pace esperado</span>
+        <span class="li"><div class="ld-line" style="background:rgba(255,255,255,0.2);"></div>Meta anual</span>
+      </div>
+    </div>
+    <div class="pace-body">
+      <div class="banker-row">
+        <div class="banker-top"><span class="banker-name">RI — Ricardo Infantozzi</span>
+          <div class="banker-vals"><span class="bv">Jan: <strong>R$3,6MM</strong></span><span class="bv">Fev: <strong>R$12,6MM</strong></span><span class="bv">YTD: <strong>R$16,1MM</strong></span><span class="pace-badge p-warn">96,8% do pace</span></div>
+        </div>
+        <div class="bar-outer"><div class="bar-track"><div class="seg-jan" style="width:3.57%"></div><div class="seg-fev" style="width:12.57%"></div></div>
+          <div class="marker m-pace" style="left:16.67%"><span class="m-label" style="color:#f0b429;">16,7MM</span></div>
+          <div class="marker m-meta" style="left:99.5%"><span class="m-label" style="color:#6b7280;">100MM</span></div>
+        </div>
+        <div class="bar-sub"><span class="bar-pct"><strong style="color:#5a9e6f;">Jan 3,6%</strong> + <strong style="color:#3D754E;">Fev 12,6%</strong></span><span class="bar-pct">Gap: <strong style="color:var(--ow);">R$83,9MM</strong></span></div>
+      </div>
+      <div class="banker-row">
+        <div class="banker-top"><span class="banker-name">MJ — Mateus Janisella</span>
+          <div class="banker-vals"><span class="bv">Jan: <strong>R$0,5MM</strong></span><span class="bv">Fev: <strong>R$12,8MM</strong></span><span class="bv">YTD: <strong>R$13,3MM</strong></span><span class="pace-badge p-warn">79,5% do pace</span></div>
+        </div>
+        <div class="bar-outer"><div class="bar-track"><div class="seg-jan" style="width:0.46%"></div><div class="seg-fev" style="width:12.79%"></div></div>
+          <div class="marker m-pace" style="left:16.67%"><span class="m-label" style="color:#f0b429;">16,7MM</span></div>
+          <div class="marker m-meta" style="left:99.5%"></div>
+        </div>
+        <div class="bar-sub"><span class="bar-pct"><strong style="color:#5a9e6f;">Jan 0,5%</strong> + <strong style="color:#3D754E;">Fev 12,8%</strong></span><span class="bar-pct">Gap: <strong style="color:var(--ow);">R$86,7MM</strong></span></div>
+      </div>
+      <div class="banker-row">
+        <div class="banker-top"><span class="banker-name">DN — Daniel Noh</span>
+          <div class="banker-vals"><span class="bv">Jan: <strong>R$8,4MM</strong></span><span class="bv">Fev: <strong>R$0,03MM</strong></span><span class="bv">YTD: <strong>R$8,4MM</strong></span><span class="pace-badge p-low">50,5% do pace</span></div>
+        </div>
+        <div class="bar-outer"><div class="bar-track"><div class="seg-jan" style="width:8.38%"></div><div class="seg-fev" style="width:0.03%"></div></div>
+          <div class="marker m-pace" style="left:16.67%"><span class="m-label" style="color:#f0b429;">16,7MM</span></div>
+          <div class="marker m-meta" style="left:99.5%"></div>
+        </div>
+        <div class="bar-sub"><span class="bar-pct"><strong style="color:#5a9e6f;">Jan 8,4%</strong> + <strong style="color:#3D754E;">Fev ~0%</strong></span><span class="bar-pct">Gap: <strong style="color:var(--ow);">R$91,6MM</strong></span></div>
+      </div>
+      <div class="banker-row">
+        <div class="banker-top"><span class="banker-name">NC — Nathan Cohen</span>
+          <div class="banker-vals"><span class="bv">Jan: <strong>R$1,4MM</strong></span><span class="bv">Fev: <strong>R$6,3MM</strong></span><span class="bv">YTD: <strong>R$7,6MM</strong></span><span class="pace-badge p-low">45,7% do pace</span></div>
+        </div>
+        <div class="bar-outer"><div class="bar-track"><div class="seg-jan" style="width:1.37%"></div><div class="seg-fev" style="width:6.25%"></div></div>
+          <div class="marker m-pace" style="left:16.67%"><span class="m-label" style="color:#f0b429;">16,7MM</span></div>
+          <div class="marker m-meta" style="left:99.5%"></div>
+        </div>
+        <div class="bar-sub"><span class="bar-pct"><strong style="color:#5a9e6f;">Jan 1,4%</strong> + <strong style="color:#3D754E;">Fev 6,3%</strong></span><span class="bar-pct">Gap: <strong style="color:var(--ow);">R$92,4MM</strong></span></div>
+      </div>
+      <div class="pace-divider"></div>
+      <div class="total-block">
+        <div class="total-top">
+          <span style="font-size:12px;font-weight:500;color:var(--gl);">Total RTS</span>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <span style="font-size:11px;color:var(--muted);">Jan: <strong style="color:#5a9e6f;">R$13,8MM</strong></span>
+            <span style="font-size:11px;color:var(--muted);">Fev: <strong style="color:var(--green);">R$31,6MM</strong></span>
+            <span style="font-size:11px;color:var(--muted);">YTD: <strong style="color:#5a9e6f;">R$45,4MM</strong></span>
+            <span class="pace-badge p-warn">68,4% do pace</span>
+          </div>
+        </div>
+        <div class="total-bar-outer">
+          <div class="total-track">
+            <div style="height:100%;background:#5a9e6f;width:3.44%;border-radius:6px 0 0 6px;"></div>
+            <div style="height:100%;background:#3D754E;width:7.91%;border-radius:0 4px 4px 0;"></div>
+          </div>
+          <div class="marker m-pace" style="left:16.67%;top:-3px;height:calc(100% + 6px);"></div>
+          <div class="marker m-meta" style="left:99.5%;top:-3px;height:calc(100% + 6px);"></div>
+        </div>
+        <div class="total-sub">
+          <span style="font-size:10px;color:var(--gl);">11,4% da meta anual concluído</span>
+          <span style="font-size:10px;color:var(--warn);">Pace esperado: 16,7% · Gap: R$354,6MM</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card row1">
+    <div class="gbar"></div>
+    <div class="card-title">Progresso vs Meta Anual</div>
+    <div class="card-sub">R$100MM por banker · YTD Jan–Fev/26 · ritmo esperado: 16,7%</div>
+    <div style="margin-top:.75rem;">
+      <div class="prog-wrap"><div class="prog-label"><span class="prog-name">RI</span><span class="prog-val">R$16,1MM · 16,1%</span></div><div class="prog-bar"><div class="prog-fill mid" style="width:16.1%"></div></div></div>
+      <div class="prog-wrap"><div class="prog-label"><span class="prog-name">MJ</span><span class="prog-val">R$13,3MM · 13,3%</span></div><div class="prog-bar"><div class="prog-fill mid" style="width:13.3%"></div></div></div>
+      <div class="prog-wrap"><div class="prog-label"><span class="prog-name">DN</span><span class="prog-val">R$8,4MM · 8,4%</span></div><div class="prog-bar"><div class="prog-fill low" style="width:8.4%"></div></div></div>
+      <div class="prog-wrap"><div class="prog-label"><span class="prog-name">NC</span><span class="prog-val">R$7,6MM · 7,6%</span></div><div class="prog-bar"><div class="prog-fill low" style="width:7.6%"></div></div></div>
+      <div class="prog-wrap" style="margin-top:.75rem;"><div class="prog-label"><span class="prog-name" style="color:var(--gl);">Total RTS</span><span class="prog-val" style="color:var(--gl);">R$45,4MM · 11,4%</span></div><div class="prog-bar"><div class="prog-fill" style="width:11.4%"></div></div></div>
+    </div>
+    <div class="note">RI está no ritmo. DN e NC preocupantes — abaixo de 50% do pace esperado.</div>
+  </div>
+</div>
+
+<!-- ===== ABA 5: BANKERS ===== -->
+<div id="page-bankers" class="page">
+  <div class="metrics">
+    <div class="mc"><div class="mc-label">AUM Total RTS</div><div class="mc-value">R$ 455MM</div><div class="mc-note">Sem gestão</div></div>
+    <div class="mc"><div class="mc-label">Total Clientes</div><div class="mc-value">88</div><div class="mc-note">DN+MJ+NC+RI</div></div>
+    <div class="mc mc-up"><div class="mc-label">Maior Receita Fev</div><div class="mc-value">MJ</div><div class="mc-note">R$ 61.508</div></div>
+    <div class="mc mc-warn"><div class="mc-label">ROA NC</div><div class="mc-value">0,22%</div><div class="mc-note">⚠ Queda taxa IDB</div></div>
+  </div>
+  <div class="row2e">
+    <div class="card">
+      <div class="gbar"></div>
+      <div class="card-title">AUM por Banker — Fev/26</div>
+      <div class="card-sub">Custódia sob assessoria (R$ MM)</div>
+      <div style="position:relative;width:100%;height:210px;"><canvas id="aumBankerChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="gbar"></div>
+      <div class="card-title">ROA Consultoria por Banker</div>
+      <div class="card-sub">Jan vs Fev/26</div>
+      <div style="position:relative;width:100%;height:210px;"><canvas id="roaBankerChart"></canvas></div>
+      <div class="warn-note">⚠ ROA NC caiu — impacto IDB (taxa 0,3% → 0,2%).</div>
+    </div>
+  </div>
+
+  <!-- BANKER DRILL DOWN -->
+  <div class="card row1">
+    <div class="gbar"></div>
+    <div class="card-title">Receita Banker — L3M + Breakdown por linha</div>
+    <div class="card-sub">Dez/25, Jan/26 e Fev/26 · clique em um banker para ver detalhamento</div>
+    <div class="hint">↓ Clique em qualquer barra para expandir o detalhamento por linha</div>
+    <div class="legend">
+      <span class="li"><span class="ld" style="background:rgba(61,117,78,0.2);border:1px solid #3D754E;"></span>Dez/25</span>
+      <span class="li"><span class="ld" style="background:rgba(61,117,78,0.55);"></span>Jan/26</span>
+      <span class="li"><span class="ld" style="background:#3D754E;"></span>Fev/26</span>
+    </div>
+    <div style="position:relative;width:100%;height:200px;"><canvas id="l3mTop"></canvas></div>
+    <div class="drill-divider" id="l3mDivider">
+      <div class="drill-line"></div>
+      <div class="drill-label">Detalhamento: <span class="drill-pill" id="l3mPill">—</span></div>
+      <div class="drill-line"></div>
+    </div>
+    <div class="bottom-wrap" id="l3mBotWrap">
+      <div class="legend" id="l3mLegend" style="margin-bottom:8px;"></div>
+      <div class="bottom-grid">
+        <div style="position:relative;width:100%;height:220px;"><canvas id="l3mBot"></canvas></div>
+        <div class="mini-tbl" id="l3mMiniTable"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card row1">
+    <div class="gbar"></div>
+    <div class="card-title">Clientes e Receita média por Cliente — Fev/26</div>
+    <div class="card-sub"></div>
+    <table>
+      <thead><tr><th>Banker</th><th>Clientes</th><th>AUM (MM)</th><th>Rec/Cliente</th><th>ROA</th></tr></thead>
+      <tbody>
+        <tr><td>MJ</td><td>22</td><td>R$111MM</td><td>R$2.796</td><td>0,55%</td></tr>
+        <tr><td>RI</td><td>35</td><td>R$112,7MM</td><td>R$1.431</td><td>0,51%</td></tr>
+        <tr><td>DN</td><td>23</td><td>R$118,2MM</td><td>R$1.691</td><td>0,38%</td></tr>
+        <tr><td>NC</td><td>8</td><td>R$113,3MM</td><td>R$4.275</td><td>0,22%</td></tr>
+        <tr class="tr-total"><td>Total</td><td>88</td><td>R$455MM</td><td>R$2.099</td><td>0,41%</td></tr>
+      </tbody>
+    </table>
+    <div class="note">NC tem maior receita por cliente mas ROA mais baixo — AUM elevado com taxa reduzida pelo IDB.</div>
+  </div>
+</div>
+
+<script>
+const gc='rgba(255,255,255,0.07)',lc='#6b7280';
+
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+function showCtab(group,id,btn){
+  const card=btn.closest('.card');
+  card.querySelectorAll('.ctab-content').forEach(el=>el.classList.remove('active'));
+  card.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(group+'-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+function toggleAcc(id){
+  document.getElementById('body-'+id).classList.toggle('open');
+  document.getElementById('arr-'+id).classList.toggle('open');
+}
+
+// Margem condicional
+if(47.4<40){document.getElementById('mc-margem').classList.remove('mc-warn');document.getElementById('margem-val').style.color='var(--danger)';}
+
+// ===== VISÃO GERAL =====
+new Chart(document.getElementById('aumOrcChart'),{type:'bar',data:{labels:['Dez/25','Jan/26','Fev/26'],datasets:[
+  {label:'Realizado',data:[544.5,567.4,582.0],backgroundColor:'#3D754E',borderRadius:4},
+  {label:'Orçado',data:[null,575,597.5],backgroundColor:'rgba(240,180,41,0.2)',borderRadius:4,borderWidth:1.5,borderColor:'#f0b429'}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:500,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+v+'MM'}}}}});
+
+new Chart(document.getElementById('roaOrcChart'),{type:'line',data:{labels:['Dez/25','Jan/26','Fev/26'],datasets:[
+  {label:'Realizado',data:[0.43,0.437,0.41],borderColor:'#3D754E',backgroundColor:'rgba(61,117,78,0.1)',pointBackgroundColor:'#3D754E',tension:0.3,borderWidth:2,pointRadius:4,fill:true},
+  {label:'Orçado',data:[null,0.45,0.45],borderColor:'#f0b429',borderDash:[5,4],pointBackgroundColor:'#f0b429',borderWidth:1.5,pointRadius:4}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:0.3,max:0.55,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v.toFixed(2)+'%'}}}}});
+
+new Chart(document.getElementById('recLucroChart'),{type:'bar',data:{labels:['Dez/25','Jan/26','Fev/26'],datasets:[
+  {label:'Receita Líquida',data:[181.8,149.8,156.0],backgroundColor:'#3D754E',borderRadius:4},
+  {label:'Lucro Líquido',data:[104.8,72.6,73.9],backgroundColor:'#a3d9b1',borderRadius:4}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+v+'K'}}}}});
+
+const mR=[57.7,48.5,47.4],mC=mR[2]<40?'#f87171':'#3D754E',mF=mR[2]<40?'rgba(248,113,113,0.1)':'rgba(61,117,78,0.1)';
+new Chart(document.getElementById('margemChart'),{type:'line',data:{labels:['Dez/25','Jan/26','Fev/26'],datasets:[
+  {label:'Realizado',data:mR,borderColor:mC,backgroundColor:mF,pointBackgroundColor:mC,tension:0.3,borderWidth:2,pointRadius:4,fill:true},
+  {label:'Orçado',data:[null,55.6,58.2],borderColor:'#f0b429',borderDash:[5,4],pointBackgroundColor:'#f0b429',borderWidth:1.5,pointRadius:4},
+  {label:'Limite 40%',data:[40,40,40],borderColor:'rgba(248,113,113,0.5)',borderDash:[3,3],borderWidth:1,pointRadius:0}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:30,max:70,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v+'%'}}}}});
+
+// ===== RECEITA: RTS (sem DU) =====
+new Chart(document.getElementById('recRtsChart'),{type:'bar',data:{labels:['Jan/26','Fev/26'],datasets:[
+  {label:'Consultoria',data:[158639,157117],backgroundColor:'#3D754E',borderRadius:3},
+  {label:'Rec. Financeira',data:[2880,1723],backgroundColor:'#60a5fa',borderRadius:3}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{stacked:true,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});
+
+// ===== AUGE DRILL =====
+const augeLINHAS=[
+  {nome:'Banking',cor:'#60a5fa',jan:{RI:175.6,MJ:66.98,NC:128.91,DN:116.05,"PJ's":139.49},fev:{RI:0,MJ:0,NC:0,DN:0,"PJ's":0}},
+  {nome:'Câmbio/IDB',cor:'#f0b429',jan:{IDB:9745.14},fev:{IDB:12170.09}},
+  {nome:'Consórcio',cor:'#a3d9b1',jan:{RI:0,MJ:1733,NC:0,DN:0},fev:{RI:0,MJ:6018.53,NC:0,DN:0}},
+  {nome:'Seguros',cor:'#c084fc',jan:{RI:0,MJ:1902.43,NC:0,DN:0},fev:{RI:0,MJ:1902.43,NC:0,DN:0}},
+  {nome:'Financiamento',cor:'#fb923c',jan:{RI:0,MJ:0,NC:0,DN:2477.64},fev:{RI:0,MJ:0,NC:0,DN:0}},
+  {nome:'Offshore',cor:'#94a3b8',jan:{RI:0,MJ:0,NC:0,DN:1055.28},fev:{RI:0,MJ:0,NC:0,DN:0}},
+];
+const augeAtivas=augeLINHAS.filter(l=>Object.values(l.jan).reduce((a,b)=>a+b,0)+Object.values(l.fev).reduce((a,b)=>a+b,0)>0);
+const totJ=l=>Object.values(l.jan).reduce((a,b)=>a+b,0);
+const totF=l=>Object.values(l.fev).reduce((a,b)=>a+b,0);
+
+// Adicionar total como última entrada
+const augeLabels=[...augeAtivas.map(l=>l.nome),'Total'];
+const augeJan=[...augeAtivas.map(totJ), augeAtivas.reduce((s,l)=>s+totJ(l),0)];
+const augeFev=[...augeAtivas.map(totF), augeAtivas.reduce((s,l)=>s+totF(l),0)];
+const augeCors=[...augeAtivas.map(l=>l.cor),'#5a9e6f'];
+
+const augeTopChart=new Chart(document.getElementById('augeTop'),{type:'bar',data:{labels:augeLabels,datasets:[
+  {label:'Jan/26',data:augeJan,backgroundColor:'rgba(61,117,78,0.45)',borderRadius:3},
+  {label:'Fev/26',data:augeFev,backgroundColor:augeCors,borderRadius:3}
+]},options:{responsive:true,maintainAspectRatio:false,
+  onClick(evt,els){if(!els.length)return;const i=els[0].index;if(i<augeAtivas.length)openAugeDrill(augeAtivas[i]);},
+  plugins:{legend:{display:false},tooltip:{callbacks:{footer:()=>['Clique para ver por banker']}}},
+  scales:{x:{grid:{display:false},ticks:{color:'#F9F5EF',font:{size:9},maxRotation:25}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v>=1000?'R$'+(v/1000).toFixed(1)+'K':'R$'+v}}}}});
+
+let augeBotChart=null,augeCurrentLinha=null;
+function openAugeDrill(linha){
+  if(augeCurrentLinha===linha.nome){
+    document.getElementById('augeBotWrap').classList.remove('open');
+    document.getElementById('augeDivider').classList.remove('visible');
+    augeCurrentLinha=null;
+    augeTopChart.data.datasets[1].backgroundColor=augeCors;
+    augeTopChart.update();return;
+  }
+  augeCurrentLinha=linha.nome;
+  augeTopChart.data.datasets[1].backgroundColor=augeLabels.map((l,i)=>i<augeAtivas.length?(l===linha.nome?augeCors[i]:'rgba(100,100,100,0.25)'):augeCors[i]);
+  augeTopChart.update();
+  const pill=document.getElementById('augePill');
+  pill.textContent=linha.nome;pill.style.background=linha.cor;
+  pill.style.color=['#f0b429','#a3d9b1','#fb923c'].includes(linha.cor)?'#1A1A1B':'#fff';
+  document.getElementById('augeDivider').classList.add('visible');
+  const bankers=Object.keys(linha.jan);
+  const jv=bankers.map(b=>linha.jan[b]||0),fv=bankers.map(b=>linha.fev[b]||0);
+  if(augeBotChart){augeBotChart.destroy();augeBotChart=null;}
+  augeBotChart=new Chart(document.getElementById('augeBot'),{type:'bar',data:{labels:bankers,datasets:[
+    {label:'Jan/26',data:jv,backgroundColor:'rgba(61,117,78,0.45)',borderRadius:3},
+    {label:'Fev/26',data:fv,backgroundColor:linha.cor,borderRadius:3}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},
+    scales:{x:{grid:{display:false},ticks:{color:'#F9F5EF',font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v>=1000?'R$'+(v/1000).toFixed(2)+'K':'R$'+Math.round(v)}}}}});
+  const fmt=v=>v>0?(v>=1000?'R$'+(v/1000).toFixed(2)+'K':'R$'+Math.round(v)):'<span style="color:#3d3d3e">—</span>';
+  const tj=jv.reduce((a,b)=>a+b,0),tf=fv.reduce((a,b)=>a+b,0);
+  document.getElementById('augeMiniTable').innerHTML=`<table>
+    <thead><tr><th>Banker</th><th>Jan</th><th>Fev</th><th>Var.</th></tr></thead>
+    <tbody>${bankers.map((b,i)=>{const j=jv[i],f=fv[i];const vp=j>0?((f-j)/j*100).toFixed(0)+'%':f>0?'novo':'—';const vc=f>j?'#5a9e6f':f<j?'#f87171':'#6b7280';
+    return`<tr><td style="color:var(--muted)">${b}</td><td>${fmt(j)}</td><td>${fmt(f)}</td><td style="color:${vc};font-size:10px">${vp}</td></tr>`}).join('')}
+    <tr class="tr-tot"><td>Total</td><td>${fmt(tj)}</td><td>${fmt(tf)}</td><td style="color:${tf>tj?'#5a9e6f':'#f87171'};font-size:10px">${tj>0?((tf-tj)/tj*100).toFixed(0)+'%':'—'}</td></tr>
+    </tbody></table>`;
+  document.getElementById('augeBotWrap').classList.add('open');
+}
+
+// ===== CUSTOS =====
+new Chart(document.getElementById('custosChart'),{type:'bar',data:{labels:['Desp.Adm','Pessoas','Sistemas','Consolidação','Comercial','Estratégia'],datasets:[
+  {label:'Realizado',data:[25738,29194,12029,12094,1535,1500],backgroundColor:'#3D754E',borderRadius:4},
+  {label:'Orçado',data:[18800,29750,12050,14157,4000,1500],backgroundColor:'rgba(240,180,41,0.22)',borderRadius:4,borderWidth:1.5,borderColor:'#f0b429'}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:9},maxRotation:25}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});
+const vv=[-37,2,0,17,61,0];
+new Chart(document.getElementById('varChart'),{type:'bar',data:{labels:['Desp.Adm','Pessoas','Sistemas','Consolidação','Comercial','Estratégia'],datasets:[{data:vv,backgroundColor:vv.map(v=>v>=0?'rgba(90,158,111,0.7)':'rgba(248,113,113,0.7)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:9},maxRotation:25}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v+'%'}}}}});
+
+// ===== BANKERS =====
+new Chart(document.getElementById('aumBankerChart'),{type:'bar',data:{labels:['DN','MJ','NC','RI'],datasets:[{data:[118.2,111.0,113.3,112.7],backgroundColor:['#3D754E','#5a9e6f','#3D754E','#5a9e6f'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:100,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+v+'MM'}}}}});
+new Chart(document.getElementById('roaBankerChart'),{type:'bar',data:{labels:['DN','MJ','NC','RI'],datasets:[
+  {label:'Jan/26',data:[0.385,0.586,0.272,0.531],backgroundColor:'rgba(61,117,78,0.4)',borderRadius:3},
+  {label:'Fev/26',data:[0.377,0.553,0.223,0.509],backgroundColor:'#3D754E',borderRadius:3}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v.toFixed(2)+'%'}}}}});
+
+// ===== BANKER L3M DRILL =====
+const bkColors={DN:'#5a9e6f',MJ:'#3D754E',NC:'#60a5fa',RI:'#a3d9b1'};
+const bkL3m={DN:{dez:30958,jan:42778,fev:38892},MJ:{dez:49146,jan:52941,fev:59072},NC:{dez:40547,jan:35044,fev:33329},RI:{dez:48932,jan:45416,fev:47812}};
+const bkBreak={
+  DN:{labels:['Consultoria','Cons. DU','Banking','Outros'],dez:[28900,1830,0,228],jan:[39129,1779,116,1754],fev:[37124,1768,0,0],colors:['#3D754E','#5a9e6f','#60a5fa','#6b7280']},
+  MJ:{labels:['Consultoria','Cons. DU','Banking','Outros'],dez:[44700,2031,0,2415],jan:[49099,2232,206,3635],fev:[51151,2436,0,7921],colors:['#3D754E','#5a9e6f','#60a5fa','#f0b429']},
+  NC:{labels:['Consultoria','Cons. DU','IDB/Câmbio','Banking'],dez:[33200,1702,5400,245],jan:[25170,1144,9745,129],fev:[21030,1001,12170,129],colors:['#3D754E','#5a9e6f','#f0b429','#60a5fa']},
+  RI:{labels:['Consultoria','Cons. DU','Banking','Outros'],dez:[44900,1981,0,1051],jan:[45241,2056,176,0],fev:[47812,2277,0,0],colors:['#3D754E','#5a9e6f','#60a5fa','#6b7280']}
+};
+const bankers=['DN','MJ','NC','RI'];
+
+const l3mTop=new Chart(document.getElementById('l3mTop'),{type:'bar',data:{labels:bankers,datasets:[
+  {label:'Dez/25',data:bankers.map(b=>bkL3m[b].dez),backgroundColor:'rgba(61,117,78,0.2)',borderRadius:3,borderWidth:1,borderColor:'#3D754E'},
+  {label:'Jan/26',data:bankers.map(b=>bkL3m[b].jan),backgroundColor:'rgba(61,117,78,0.55)',borderRadius:3},
+  {label:'Fev/26',data:bankers.map(b=>bkL3m[b].fev),backgroundColor:bankers.map(b=>bkColors[b]),borderRadius:3}
+]},options:{responsive:true,maintainAspectRatio:false,
+  onClick(evt,els){if(!els.length)return;openL3mDrill(bankers[els[0].index]);},
+  plugins:{legend:{display:false},tooltip:{callbacks:{footer:()=>['Clique para ver breakdown por linha']}}},
+  scales:{x:{grid:{display:false},ticks:{color:'#F9F5EF',font:{size:12,weight:'500'}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});
+
+let l3mBotChart=null,l3mCurrent=null;
+function openL3mDrill(banker){
+  if(l3mCurrent===banker){
+    document.getElementById('l3mBotWrap').classList.remove('open');
+    document.getElementById('l3mDivider').classList.remove('visible');
+    l3mCurrent=null;
+    l3mTop.data.datasets[2].backgroundColor=bankers.map(b=>bkColors[b]);
+    l3mTop.update();return;
+  }
+  l3mCurrent=banker;
+  l3mTop.data.datasets[2].backgroundColor=bankers.map(b=>b===banker?bkColors[b]:'rgba(61,117,78,0.2)');
+  l3mTop.update();
+  const pill=document.getElementById('l3mPill');
+  pill.textContent=banker;pill.style.background=bkColors[banker];
+  pill.style.color=['#a3d9b1','#5a9e6f'].includes(bkColors[banker])?'#1A1A1B':'#fff';
+  document.getElementById('l3mDivider').classList.add('visible');
+  const d=bkBreak[banker];
+  document.getElementById('l3mLegend').innerHTML=d.labels.map((l,i)=>`<span class="li"><span class="ld" style="background:${d.colors[i]};"></span>${l}</span>`).join('');
+  if(l3mBotChart){l3mBotChart.destroy();l3mBotChart=null;}
+  l3mBotChart=new Chart(document.getElementById('l3mBot'),{type:'bar',data:{labels:['Dez/25','Jan/26','Fev/26'],datasets:d.labels.map((label,i)=>({label,data:[d.dez[i],d.jan[i],d.fev[i]],backgroundColor:d.colors[i],borderRadius:3}))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});
+  const fmt2=v=>v>0?'R$'+(v>=1000?(v/1000).toFixed(1)+'K':Math.round(v)):'<span style="color:#3d3d3e">—</span>';
+  document.getElementById('l3mMiniTable').innerHTML=`<table>
+    <thead><tr><th>Linha</th><th>Dez</th><th>Jan</th><th>Fev</th></tr></thead>
+    <tbody>${d.labels.map((l,i)=>`<tr><td style="color:var(--muted);display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:2px;background:${d.colors[i]};flex-shrink:0;display:inline-block;"></span>${l}</td><td>${fmt2(d.dez[i])}</td><td>${fmt2(d.jan[i])}</td><td>${fmt2(d.fev[i])}</td></tr>`).join('')}
+    <tr class="tr-tot"><td>Total</td><td>${fmt2(bkL3m[banker].dez)}</td><td>${fmt2(bkL3m[banker].jan)}</td><td>${fmt2(bkL3m[banker].fev)}</td></tr>
+    </tbody></table>`;
+  document.getElementById('l3mBotWrap').classList.add('open');
+}
+</script>
+</body>
+</html>
