@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RTS Partners · Report Financeiro Fev/26</title>
+<title>RTS Partners · Report Financeiro</title>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
@@ -23,7 +23,13 @@ body{font-family:'Ubuntu',sans-serif;background:var(--black);color:var(--ow);min
 .tab{font-size:12px;font-weight:500;padding:14px 16px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;}
 .tab:hover{color:var(--ow);}
 .tab.active{color:#fff;border-bottom-color:var(--green);}
-.period{margin-left:auto;font-size:11px;background:var(--green);color:#fff;border-radius:4px;padding:3px 10px;flex-shrink:0;font-weight:500;}
+
+/* MONTH SELECTOR */
+.month-selector{margin-left:auto;display:flex;align-items:center;gap:0;flex-shrink:0;}
+.month-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:4px 7px;transition:color .15s;line-height:1;}
+.month-btn:hover:not(:disabled){color:var(--ow);}
+.month-btn:disabled{opacity:0.25;cursor:default;}
+.month-label{font-size:11px;background:var(--green);color:#fff;border-radius:4px;padding:3px 10px;font-weight:500;min-width:58px;text-align:center;}
 
 .page{display:none;padding:1.5rem;max-width:1200px;margin:0 auto;}
 .page.active{display:block;}
@@ -70,7 +76,6 @@ tr:last-child td{border-bottom:none;}
 .ctab-content{display:none;}
 .ctab-content.active{display:block;}
 
-/* ACCORDION */
 .acc-group{border-bottom:1px solid rgba(255,255,255,0.04);}
 .acc-header{display:flex;align-items:center;justify-content:space-between;padding:9px 8px;cursor:pointer;border-radius:4px;transition:background .12s;}
 .acc-header:hover{background:rgba(255,255,255,0.04);}
@@ -99,7 +104,6 @@ tr:last-child td{border-bottom:none;}
 .diff-pos{background:rgba(90,158,111,.2);color:var(--gl);}
 .diff-neg{background:rgba(248,113,113,.15);color:var(--danger);}
 
-/* PACE BARS */
 .pace-section{background:var(--gray);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;}
 .pace-header{padding:1rem 1.1rem .75rem;}
 .pace-body{padding:0 1.1rem 1rem;}
@@ -130,7 +134,6 @@ tr:last-child td{border-bottom:none;}
 .total-track{height:100%;background:rgba(255,255,255,0.06);border-radius:6px;overflow:hidden;display:flex;}
 .total-sub{display:flex;justify-content:space-between;margin-top:4px;}
 
-/* DRILL DOWN */
 .drill-divider{display:flex;align-items:center;gap:10px;margin:12px 0 10px;opacity:0;transition:opacity .25s;}
 .drill-divider.visible{opacity:1;}
 .drill-line{flex:1;height:1px;background:rgba(255,255,255,0.1);}
@@ -142,7 +145,6 @@ tr:last-child td{border-bottom:none;}
 .bottom-chart{position:relative;width:100%;height:230px;}
 .hint{font-size:11px;color:var(--gl);margin-bottom:.85rem;}
 
-/* MINI TABLE (drill) */
 .mini-tbl table{width:100%;border-collapse:collapse;font-size:11px;}
 .mini-tbl th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:400;padding:4px 6px;border-bottom:1px solid var(--border);text-align:right;}
 .mini-tbl th:first-child{text-align:left;}
@@ -152,7 +154,6 @@ tr:last-child td{border-bottom:none;}
 .mini-tbl .tr-tot td{color:var(--gl);font-weight:500;border-top:1px solid var(--green);}
 .zero{color:#3d3d3e !important;}
 
-/* PROGRESS */
 .prog-wrap{margin-bottom:10px;}
 .prog-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
 .prog-name{font-size:12px;color:var(--ow);font-weight:500;}
@@ -172,7 +173,6 @@ tr:last-child td{border-bottom:none;}
 </head>
 <body>
 
-<!-- NAV -->
 <div class="nav">
   <div class="nav-brand">
     <svg class="brand-logo" viewBox="0 0 167 158" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -190,71 +190,402 @@ tr:last-child td{border-bottom:none;}
   <div class="tab" onclick="showPage('custos',this)">Custos</div>
   <div class="tab" onclick="showPage('captacao',this)">Captação</div>
   <div class="tab" onclick="showPage('bankers',this)">Bankers</div>
-  <span class="period">Fev/26</span>
+  <div class="month-selector">
+    <button class="month-btn" id="btnPrev" onclick="changeMonth(-1)">&#8592;</button>
+    <span class="month-label" id="monthLabel">Fev/26</span>
+    <button class="month-btn" id="btnNext" onclick="changeMonth(1)">&#8594;</button>
+  </div>
 </div>
 
-<!-- ===== ABA 1: VISÃO GERAL ===== -->
-<div id="page-visao" class="page active">
-  <div class="metrics">
-    <div class="mc mc-up"><div class="mc-label">AUM Custódia</div><div class="mc-value">R$ 582MM</div><div class="mc-note">▲ 2,6% vs Jan/26</div></div>
-    <div class="mc mc-up"><div class="mc-label">Receita Líquida</div><div class="mc-value">R$ 156K</div><div class="mc-note">▲ 4,1% vs Jan/26</div></div>
-    <div class="mc mc-up2"><div class="mc-label">Lucro Líquido</div><div class="mc-value">R$ 73,9K</div><div class="mc-note">▲ 1,8% vs Jan/26</div></div>
-    <div class="mc mc-warn" id="mc-margem"><div class="mc-label">Margem Líquida</div><div class="mc-value" id="margem-val">47,4%</div><div class="mc-note">⚠ Abaixo de 50%</div></div>
-    <div class="mc"><div class="mc-label">ROA Consultoria</div><div class="mc-value">0,41%</div><div class="mc-note">Orçado: 0,45%</div></div>
-    <div class="mc"><div class="mc-label">Caixa RTS</div><div class="mc-value">R$ 194K</div><div class="mc-note">Dez/25: R$ 284K</div></div>
-  </div>
+<!-- ===== PAGES (rendered by JS) ===== -->
+<div id="page-visao" class="page active"></div>
+<div id="page-receita" class="page"></div>
+<div id="page-custos" class="page"></div>
+<div id="page-captacao" class="page"></div>
+<div id="page-bankers" class="page"></div>
+
+<script>
+const gc='rgba(255,255,255,0.07)',lc='#6b7280';
+
+// ===================== DATA =====================
+const MONTHS = ['Jan/26','Fev/26'];
+let curM = 1; // 0=Jan, 1=Fev
+
+const D = {
+  0: { // Janeiro
+    label:'Jan/26',
+    // Visão Geral
+    visao:{
+      metrics:[
+        {cls:'mc-up',   label:'AUM Custódia',    value:'R$ 567MM', note:'▲ 4,2% vs Dez/25'},
+        {cls:'',        label:'Receita Líquida', value:'R$ 149,8K',note:'Dez/25: R$ 181,8K'},
+        {cls:'mc-up2',  label:'Lucro Líquido',   value:'R$ 72,6K', note:'Dez/25: R$ 104,8K'},
+        {cls:'mc-warn', label:'Margem Líquida',  value:'48,4%',    note:'⚠ Abaixo de 50%', warn:true},
+        {cls:'',        label:'ROA Consultoria', value:'0,44%',    note:'Orçado: 0,45%'},
+        {cls:'',        label:'Caixa RTS',       value:'R$ 206K',  note:'Dez/25: R$ 284K'}
+      ],
+      aumOrc:{labels:['Dez/25','Jan/26'],real:[544.5,567.4],orc:[null,575],noteText:'Jan/26: R$567MM realizado vs R$575MM orçado — gap de -1,4%.'},
+      roa:{labels:['Dez/25','Jan/26'],real:[0.43,0.44],orc:[null,0.45]},
+      recLuc:{labels:['Dez/25','Jan/26'],rec:[181.8,149.8],luc:[104.8,72.6]},
+      marg:{labels:['Dez/25','Jan/26'],real:[57.7,48.4],orc:[null,55.6],alertNote:'⚠ Margem Jan/26: 48,4% — abaixo da meta de 55,6%.'}
+    },
+    // Receita
+    receita:{
+      metrics:[
+        {cls:'mc-up',  label:'Receita Total Jan',value:'R$ 179K',   note:'Dez/25: R$ 217K'},
+        {cls:'',       label:'Consultoria RTS',  value:'R$ 158,6K', note:'88% da receita total'},
+        {cls:'',       label:'Cross-sell AUGE',  value:'R$ 20,4K',  note:'11% da receita total'},
+        {cls:'',       label:'Receita / DU',     value:'R$ 7.211',  note:'22 dias úteis'},
+        {cls:'mc-warn',label:'Campanha BTG',     value:'R$ 0',      note:'⚠ Sem campanha Jan'}
+      ],
+      du:{prev:{label:'Dez/25 — 21 DU',val:'R$ 8.656',sub:'por dia útil'},
+          cur:{label:'Jan/26 — 22 DU', val:'R$ 7.211',sub:'por dia útil',delta:'▼ -16,7% vs Dez (sem campanha)'},
+          info:'Queda explicada pela ausência de campanha BTG em janeiro — linha de consultoria segue crescente'},
+      recRts:{labels:['Dez/25','Jan/26'],consult:[143079,158639],fin:[2820,2880]},
+      auge:{
+        linhas:[
+          {nome:'Banking',   cor:'#60a5fa',  jan:{RI:175.6,MJ:206.47,NC:128.91,DN:116.05},       fev:{RI:0,MJ:0,NC:0,DN:0}},
+          {nome:'Câmbio/IDB',cor:'#f0b429',  jan:{IDB:9745.14},                                    fev:{IDB:0}},
+          {nome:'Consórcio', cor:'#a3d9b1',  jan:{MJ:1733},                                        fev:{MJ:0}},
+          {nome:'Seguros',   cor:'#c084fc',  jan:{MJ:1902.43},                                     fev:{MJ:0}},
+          {nome:'Financiamento',cor:'#fb923c',jan:{DN:2477.64},                                    fev:{DN:0}},
+          {nome:'Offshore',  cor:'#94a3b8',  jan:{DN:1055.28},                                     fev:{DN:0}},
+        ],
+        prevLabel:'Dez/25',curLabel:'Jan/26'
+      },
+      bankerAll:[
+        {bk:'MJ',consult:'R$ 49.099',du:'R$ 2.232',cross:'R$ 3.635',total:'R$ 54.966',var:'▲ 7%',vc:'pos'},
+        {bk:'RI',consult:'R$ 45.241',du:'R$ 2.056',cross:'—',      total:'R$ 47.297',var:'▼ 3%',vc:'neg'},
+        {bk:'DN',consult:'R$ 39.129',du:'R$ 1.779',cross:'R$ 5.566',total:'R$ 44.441',var:'▲ 36%',vc:'pos'},
+        {bk:'NC',consult:'R$ 25.170',du:'R$ 1.144',cross:'R$ 9.745',total:'R$ 36.059',var:'▼ 11%',vc:'neg'},
+        {bk:'Total',consult:'R$ 158.639',du:'R$ 7.211',cross:'R$ 18.946',total:'R$ 183.179',var:'▲ 2%',vc:'pos',tot:true}
+      ],
+      tabBankers:{
+        mj:{rows:[['Consultoria','R$ 38.601','R$ 49.099','R$ 87.700'],['Cross-sell','R$ 2.415','R$ 3.635','R$ 6.050'],['Cons. DU','R$ 2.031','R$ 2.232','R$ 2.232'],['Total','R$ 43.047','R$ 54.966','R$ 93.982']]},
+        dn:{rows:[['Consultoria','R$ 30.958','R$ 39.129','R$ 70.087'],['Financiamento','—','R$ 2.478','R$ 2.478'],['Offshore','—','R$ 1.055','R$ 1.055'],['Câmbio','R$ 50,70','—','R$ 50,70'],['Cons. DU','R$ 1.629','R$ 1.779','R$ 1.779'],['Total','R$ 32.638','R$ 44.441','R$ 75.394']]},
+        ri:{rows:[['Consultoria','R$ 37.629','R$ 45.241','R$ 82.870'],['Banking','—','R$ 176','R$ 176'],['Outros','R$ 959','—','R$ 959'],['Cons. DU','R$ 1.980','R$ 2.056','R$ 2.056'],['Total','R$ 40.568','R$ 47.473','R$ 85.061']]},
+        nc:{rows:[['Consultoria','R$ 27.120','R$ 25.170','R$ 52.290'],['IDB (Câmbio)','R$ 12.384','R$ 9.745','R$ 22.129'],['Banking','—','R$ 129','R$ 129'],['Cons. DU','R$ 1.427','R$ 1.144','R$ 1.144'],['Total','R$ 40.931','R$ 36.188','R$ 75.692']]}
+      },
+      tabHeaders:['Linha','Dez/25','Jan/26','1T26']
+    },
+    // Custos
+    custos:{
+      metrics:[
+        {cls:'mc-down',label:'Custo Total Jan',      value:'R$ 77,2K', note:'▲ 0,3% vs Dez'},
+        {cls:'',       label:'vs Orçado',            value:'-R$ 2,2K', note:'Orçado: R$ 79,4K — favorável'},
+        {cls:'',       label:'Pessoas',              value:'R$ 29,2K', note:'Orçado: R$ 29,8K'},
+        {cls:'mc-down',label:'Desp. Administrativas',value:'R$ 22,9K', note:'⚠ -9% vs orçado'},
+        {cls:'',       label:'Sistemas',             value:'R$ 11,6K', note:'Em linha c/ orçado'},
+        {cls:'',       label:'Consolidação',         value:'R$ 9,2K',  note:'Orçado: R$ 11,4K — favorável'}
+      ],
+      chart:{labels:['Desp.Adm','Pessoas','Sistemas','Consolidação','Comercial','Estratégia'],
+             real:[22887,29194,11627,9185,2770,1500],
+             orc: [20800,29750,11950,11397,4000,1500]},
+      varChart:{labels:['Desp.Adm','Pessoas','Sistemas','Consolidação','Comercial','Estratégia'],
+                vals:[-9,2,3,24,44,0]},
+      acordeon:[
+        {id:'comercial',name:'Despesa Comercial',real:'R$ 2.770',orc:'R$ 4.000',var:'+31%',vCls:'v-pos',
+         sub:[{name:'Relacionamento Clientes',real:'R$ 2.770',orc:'R$ 4.000'},{name:'Brindes',real:'R$ 0',orc:'R$ 0'}]},
+        {id:'adm',name:'Despesas Administrativas',real:'R$ 22.887',orc:'R$ 20.800',var:'-9%',vCls:'v-neg',
+         sub:[{name:'Sistemas',real:'R$ 11.627',orc:'R$ 11.950'},{name:'Consolidação',real:'R$ 9.185',orc:'R$ 11.397'},{name:'Estratégia',real:'R$ 1.500',orc:'R$ 1.500'},{name:'Outros',real:'R$ 0',orc:'R$ 0'}]},
+        {id:'pessoas',name:'Pessoas',real:'R$ 29.194',orc:'R$ 29.750',var:'+2%',vCls:'v-pos',
+         sub:[{name:'Plano de saúde',real:'R$ 5.554',orc:'R$ 6.750'},{name:'Salário',real:'R$ 23.640',orc:'R$ 23.000'},{name:'Floor Bankers',real:'R$ 0',orc:'R$ 0'},{name:'PLR',real:'R$ 30.000',orc:'R$ 30.000'}]},
+        {id:'expansao',name:'Expansão',real:'R$ 0',orc:'R$ 0',var:'0%',vCls:'v-neu',sub:[]},
+        {id:'variaveis',name:'Custos Variáveis',real:'R$ 0',orc:'R$ 0',var:'0%',vCls:'v-neu',sub:[]}
+      ],
+      totalReal:'-R$ 77.163',totalOrc:'-R$ 79.397',totalVar:'+3%',totalVCls:'v-pos',
+      warnNote:'✓ Custos Jan/26 favoráveis — R$2,2K abaixo do orçado. Desp. Administrativas levemente acima, resquícios da obra no cartão.'
+    },
+    // Captação (só Jan)
+    captacao:{
+      metrics:[
+        {cls:'mc-up',  label:'Captação Jan/26',  value:'R$ 13,8MM',note:'YTD acumulado'},
+        {cls:'',       label:'% da Meta Anual',  value:'3,4%',     note:'1 mês de 12'},
+        {cls:'mc-up',  label:'Melhor Jan/26',    value:'DN — R$8,4MM',note:'Maior do mês'},
+        {cls:'',       label:'Meta Mensal/Banker',value:'R$ 8,3MM',note:'R$100MM ÷ 12'},
+        {cls:'mc-warn',label:'Gap para Meta',    value:'R$ 386,2MM',note:'Restam 11 meses'}
+      ],
+      bankers:[
+        {name:'DN — Daniel Noh',      jan:8381495,fev:0,  ytd:8381495,  paceP:50.3,badge:'p-low',   badgeTxt:'50,3% do pace',gap:'R$91,6MM'},
+        {name:'MJ — Mateus Janisella',jan:461645, fev:0,  ytd:461645,   paceP:2.8, badge:'p-low',   badgeTxt:'2,8% do pace', gap:'R$99,5MM'},
+        {name:'NC — Nathan Cohen',    jan:1366352,fev:0,  ytd:1366352,  paceP:8.2, badge:'p-low',   badgeTxt:'8,2% do pace', gap:'R$98,6MM'},
+        {name:'RI — Ricardo Infantozzi',jan:3570769,fev:0,ytd:3570769,  paceP:21.4,badge:'p-warn',  badgeTxt:'21,4% do pace',gap:'R$96,4MM'}
+      ],
+      total:{jan:13780261,fev:0,ytd:13780261,paceP:20.7,badgeTxt:'20,7% do pace (1 mês)'},
+      prog:[
+        {name:'DN',val:'R$8,4MM · 8,4%',pct:8.4,cls:'mid'},
+        {name:'MJ',val:'R$0,5MM · 0,5%',pct:0.5,cls:'low'},
+        {name:'NC',val:'R$1,4MM · 1,4%',pct:1.4,cls:'low'},
+        {name:'RI',val:'R$3,6MM · 3,6%',pct:3.6,cls:'low'},
+        {name:'Total RTS',val:'R$13,8MM · 3,4%',pct:3.4,cls:'',tot:true}
+      ],
+      note:'Apenas 1 mês completo. DN teve o melhor Jan/26. MJ e NC precisam acelerar para alcançar o pace.'
+    },
+    // Bankers
+    bankers:{
+      metrics:[
+        {cls:'',       label:'AUM Total RTS',   value:'R$ 416MM',note:'Sem gestão — Jan/26'},
+        {cls:'',       label:'Total Clientes',  value:'86',      note:'DN+MJ+NC+RI'},
+        {cls:'mc-up',  label:'Maior Receita Jan',value:'MJ',     note:'R$ 54.966'},
+        {cls:'mc-warn',label:'ROA NC',          value:'0,26%',   note:'⚠ IDB pago trimestralmente'}
+      ],
+      aumBanker:{labels:['DN','MJ','NC','RI'],data:[116.35,96.0,103.82,97.52]},
+      roaBanker:{labels:['DN','MJ','NC','RI'],
+                 prev:[0.35,0.54,0.38,0.49],prevLabel:'Dez/25',
+                 cur: [0.385,0.586,0.272,0.531],curLabel:'Jan/26'},
+      l3m:{
+        bkColors:{DN:'#5a9e6f',MJ:'#3D754E',NC:'#60a5fa',RI:'#a3d9b1'},
+        bkTotals:{DN:{dez:30958,jan:42778,fev:null},MJ:{dez:49146,jan:52941,fev:null},NC:{dez:40547,jan:35044,fev:null},RI:{dez:48932,jan:45416,fev:null}},
+        bkBreak:{
+          DN:{labels:['Consultoria','Cons. DU','Banking','Outros'],dez:[28900,1830,0,228],jan:[39129,1779,116,1754],fev:[null,null,null,null],colors:['#3D754E','#5a9e6f','#60a5fa','#6b7280']},
+          MJ:{labels:['Consultoria','Cons. DU','Banking','Outros'],dez:[44700,2031,0,2415],jan:[49099,2232,206,3635],fev:[null,null,null,null],colors:['#3D754E','#5a9e6f','#60a5fa','#f0b429']},
+          NC:{labels:['Consultoria','Cons. DU','IDB/Câmbio','Banking'],dez:[33200,1702,5400,245],jan:[25170,1144,9745,129],fev:[null,null,null,null],colors:['#3D754E','#5a9e6f','#f0b429','#60a5fa']},
+          RI:{labels:['Consultoria','Cons. DU','Banking','Outros'],dez:[44900,1981,0,1051],jan:[45241,2056,176,0],fev:[null,null,null,null],colors:['#3D754E','#5a9e6f','#60a5fa','#6b7280']}
+        },
+        labels:['Dez/25','Jan/26']
+      },
+      clientTable:[
+        {bk:'MJ',cli:20,aum:'R$96MM',  rpc:'R$2.748',roa:'0,59%'},
+        {bk:'RI',cli:35,aum:'R$97,5MM',rpc:'R$1.356',roa:'0,49%'},
+        {bk:'DN',cli:23,aum:'R$116MM', rpc:'R$1.932',roa:'0,35%'},
+        {bk:'NC',cli:8, aum:'R$103,8MM',rpc:'R$4.524',roa:'0,26%'},
+        {bk:'Total',cli:86,aum:'R$416MM',rpc:'R$2.140',roa:'0,41%',tot:true}
+      ],
+      clientNote:'NC tem maior receita por cliente mas ROA mais baixo — IDB pago trimestralmente gera oscilação.'
+    }
+  },
+
+  1: { // Fevereiro
+    label:'Fev/26',
+    visao:{
+      metrics:[
+        {cls:'mc-up',   label:'AUM Custódia',    value:'R$ 582MM', note:'▲ 2,6% vs Jan/26'},
+        {cls:'mc-up',   label:'Receita Líquida', value:'R$ 156K',  note:'▲ 4,1% vs Jan/26'},
+        {cls:'mc-up2',  label:'Lucro Líquido',   value:'R$ 73,9K', note:'▲ 1,8% vs Jan/26'},
+        {cls:'mc-warn', label:'Margem Líquida',  value:'47,4%',    note:'⚠ Abaixo de 50%', warn:true},
+        {cls:'',        label:'ROA Consultoria', value:'0,41%',    note:'Orçado: 0,45%'},
+        {cls:'',        label:'Caixa RTS',       value:'R$ 194K',  note:'Dez/25: R$ 284K'}
+      ],
+      aumOrc:{labels:['Dez/25','Jan/26','Fev/26'],real:[544.5,567.4,582.0],orc:[null,575,597.5],noteText:'Fev/26: R$582MM realizado vs R$597,5MM orçado — gap de -2,6%.'},
+      roa:{labels:['Dez/25','Jan/26','Fev/26'],real:[0.43,0.437,0.41],orc:[null,0.45,0.45]},
+      recLuc:{labels:['Dez/25','Jan/26','Fev/26'],rec:[181.8,149.8,156.0],luc:[104.8,72.6,73.9]},
+      marg:{labels:['Dez/25','Jan/26','Fev/26'],real:[57.7,48.5,47.4],orc:[null,55.6,58.2],alertNote:'⚠ Margem Fev/26: 47,4% — abaixo da meta de 58,2%.'}
+    },
+    receita:{
+      metrics:[
+        {cls:'mc-up',  label:'Receita Total Fev',value:'R$ 186K',  note:'▲ 4,1% vs Jan'},
+        {cls:'',       label:'Consultoria RTS',  value:'R$ 157K',  note:'84% da receita total'},
+        {cls:'',       label:'Cross-sell AUGE',  value:'R$ 21,2K', note:'11% da receita total'},
+        {cls:'',       label:'Receita / DU',     value:'R$ 7.482', note:'▲ +3,8% real vs Jan'},
+        {cls:'mc-warn',label:'Campanha BTG',     value:'R$ 0',     note:'⚠ Sem campanha Fev'}
+      ],
+      du:{prev:{label:'Jan/26 — 22 DU',val:'R$ 7.211',sub:'por dia útil'},
+          cur:{label:'Fev/26 — 21 DU', val:'R$ 7.482',sub:'por dia útil',delta:'▲ +3,8% crescimento real'},
+          info:'Receita total similar com 1 DU a menos — crescimento real confirmado'},
+      recRts:{labels:['Jan/26','Fev/26'],consult:[158639,157117],fin:[2880,1723]},
+      auge:{
+        linhas:[
+          {nome:'Banking',   cor:'#60a5fa',  jan:{RI:175.6,MJ:66.98,NC:128.91,DN:116.05,"PJ's":139.49}, fev:{RI:0,MJ:0,NC:0,DN:0,"PJ's":0}},
+          {nome:'Câmbio/IDB',cor:'#f0b429',  jan:{IDB:9745.14},                                           fev:{IDB:12170.09}},
+          {nome:'Consórcio', cor:'#a3d9b1',  jan:{RI:0,MJ:1733,NC:0,DN:0},                               fev:{RI:0,MJ:6018.53,NC:0,DN:0}},
+          {nome:'Seguros',   cor:'#c084fc',  jan:{RI:0,MJ:1902.43,NC:0,DN:0},                            fev:{RI:0,MJ:1902.43,NC:0,DN:0}},
+          {nome:'Financiamento',cor:'#fb923c',jan:{RI:0,MJ:0,NC:0,DN:2477.64},                           fev:{RI:0,MJ:0,NC:0,DN:0}},
+          {nome:'Offshore',  cor:'#94a3b8',  jan:{RI:0,MJ:0,NC:0,DN:1055.28},                            fev:{RI:0,MJ:0,NC:0,DN:0}},
+        ],
+        prevLabel:'Jan/26',curLabel:'Fev/26'
+      },
+      bankerAll:[
+        {bk:'MJ',consult:'R$ 51.151',du:'R$ 2.436',cross:'R$ 7.921',total:'R$ 61.508',var:'▲ 12%',vc:'pos'},
+        {bk:'RI',consult:'R$ 47.812',du:'R$ 2.277',cross:'—',       total:'R$ 50.089',var:'▲ 6%', vc:'pos'},
+        {bk:'DN',consult:'R$ 37.124',du:'R$ 1.768',cross:'—',       total:'R$ 38.892',var:'▼ 13%',vc:'neg'},
+        {bk:'NC',consult:'R$ 21.030',du:'R$ 1.001',cross:'R$ 13.300',total:'R$ 34.201',var:'▼ 5%',vc:'neg'},
+        {bk:'Total',consult:'R$ 157.117',du:'R$ 7.482',cross:'R$ 21.221',total:'R$ 184.690',var:'▲ 4%',vc:'pos',tot:true}
+      ],
+      tabBankers:{
+        mj:{rows:[['Consultoria','R$ 49.099','R$ 51.151','R$ 100.251'],['Cross-sell','R$ 3.635','R$ 7.921','R$ 11.556'],['Cons. DU','R$ 2.232','R$ 2.436','R$ 2.436'],['Total','R$ 54.966','R$ 61.508','R$ 114.243']]},
+        dn:{rows:[['Consultoria','R$ 39.129','R$ 37.124','R$ 76.253'],['Outros','R$ 3.533','—','R$ 3.533'],['Cons. DU','R$ 1.779','R$ 1.768','R$ 1.768'],['Total','R$ 44.441','R$ 38.892','R$ 81.554']]},
+        ri:{rows:[['Consultoria','R$ 45.241','R$ 47.812','R$ 93.053'],['Cons. DU','R$ 2.056','R$ 2.277','R$ 2.277'],['Total','R$ 47.297','R$ 50.089','R$ 95.330']]},
+        nc:{rows:[['Consultoria','R$ 25.170','R$ 21.030','R$ 46.199'],['IDB (Câmbio)','R$ 9.745','R$ 12.170','R$ 21.915'],['Cons. DU','R$ 1.144','R$ 1.001','R$ 1.001'],['Total','R$ 36.059','R$ 34.201','R$ 69.373']]}
+      },
+      tabHeaders:['Linha','Jan/26','Fev/26','1T26']
+    },
+    custos:{
+      metrics:[
+        {cls:'mc-down',label:'Custo Total Fev',      value:'R$ 82,1K',note:'▲ 6,4% vs Jan'},
+        {cls:'mc-down',label:'vs Orçado',            value:'+R$ 1,8K',note:'Orçado: R$ 80,3K'},
+        {cls:'',       label:'Pessoas',              value:'R$ 29,2K',note:'Orçado: R$ 29,8K'},
+        {cls:'mc-down',label:'Desp. Administrativas',value:'R$ 25,7K',note:'⚠ +37% vs orçado'},
+        {cls:'',       label:'Sistemas',             value:'R$ 12K',  note:'Em linha c/ orçado'},
+        {cls:'',       label:'Consolidação',         value:'R$ 12,1K',note:'Orçado: R$ 14,2K'}
+      ],
+      chart:{labels:['Desp.Adm','Pessoas','Sistemas','Consolidação','Comercial','Estratégia'],
+             real:[25738,29194,12029,12094,1535,1500],
+             orc: [18800,29750,12050,14157,4000,1500]},
+      varChart:{labels:['Desp.Adm','Pessoas','Sistemas','Consolidação','Comercial','Estratégia'],
+                vals:[-37,2,0,17,61,0]},
+      acordeon:[
+        {id:'comercial',name:'Despesa Comercial',real:'-R$ 1.535',orc:'-R$ 4.000',var:'+61%',vCls:'v-pos',
+         sub:[{name:'Relacionamento Clientes',real:'-R$ 1.535',orc:'-R$ 4.000'},{name:'Brindes',real:'R$ 0',orc:'R$ 0'}]},
+        {id:'adm',name:'Despesas Administrativas',real:'-R$ 25.738',orc:'-R$ 18.800',var:'-37%',vCls:'v-neg',
+         sub:[{name:'Custo escritório',real:'-R$ 22.235',orc:'-R$ 14.300'},{name:'↳ Aluguel (pacote)',real:'-R$ 13.425',orc:'-R$ 11.700'},{name:'↳ Manutenção / Materiais',real:'-R$ 8.810',orc:'-R$ 2.600'},{name:'Contabilidade',real:'-R$ 3.100',orc:'-R$ 3.500'},{name:'Jurídico',real:'-R$ 403',orc:'-R$ 1.000'},{name:'Marketing',real:'R$ 0',orc:'R$ 0'}]},
+        {id:'sistemas',name:'Sistemas',real:'-R$ 12.029',orc:'-R$ 12.050',var:'0%',vCls:'v-neu',
+         sub:[{name:'PBI',real:'-R$ 1.042',orc:'-R$ 1.200'},{name:'Notion',real:'-R$ 673',orc:'-R$ 1.000'},{name:'Google',real:'-R$ 1.176',orc:'-R$ 1.300'},{name:'Mycapital',real:'-R$ 213',orc:'-R$ 250'},{name:'Outros',real:'-R$ 1.647',orc:'-R$ 1.500'},{name:'IaaS',real:'-R$ 1.703',orc:'-R$ 1.500'},{name:'AWS',real:'-R$ 3.919',orc:'-R$ 3.500'},{name:'BPO Financeiro',real:'-R$ 1.656',orc:'-R$ 1.800'}]},
+        {id:'consol',name:'Consolidação',real:'-R$ 12.094',orc:'-R$ 14.157',var:'+17%',vCls:'v-pos',
+         sub:[{name:'Regência',real:'-R$ 6.192',orc:'-R$ 8.307'},{name:'Comdinheiro',real:'-R$ 5.902',orc:'-R$ 5.850'}]},
+        {id:'estrategia',name:'Estratégia',real:'-R$ 1.500',orc:'-R$ 1.500',var:'0%',vCls:'v-neu',
+         sub:[{name:'Gestão - Infraestrutura',real:'-R$ 1.500',orc:'-R$ 1.500'}]},
+        {id:'pessoas',name:'Pessoas',real:'-R$ 29.194',orc:'-R$ 29.750',var:'+2%',vCls:'v-pos',
+         sub:[{name:'Plano de saúde',real:'-R$ 5.554',orc:'-R$ 6.750'},{name:'Salário',real:'-R$ 23.640',orc:'-R$ 23.000'},{name:'Floor Bankers',real:'R$ 0',orc:'R$ 0'}]}
+      ],
+      totalReal:'-R$ 82.089',totalOrc:'-R$ 80.257',totalVar:'-2%',totalVCls:'v-neg',
+      warnNote:'⚠ Principal desvio: Desp. Administrativas +37% — manutenção/materiais acima do previsto.'
+    },
+    captacao:{
+      metrics:[
+        {cls:'mc-up',  label:'Captação Total YTD',  value:'R$ 45,4MM',note:'Meta: R$ 400MM'},
+        {cls:'',       label:'% da Meta Anual',     value:'11,4%',    note:'2 meses de 12'},
+        {cls:'mc-up',  label:'Melhor Fev/26',       value:'MJ — R$12,8MM',note:'Maior do mês'},
+        {cls:'',       label:'Meta Mensal/Banker',  value:'R$ 8,3MM', note:'R$100MM ÷ 12'},
+        {cls:'mc-warn',label:'Gap para Meta',       value:'R$ 354,6MM',note:'Restam 10 meses'}
+      ],
+      bankers:[
+        {name:'RI — Ricardo Infantozzi',  jan:3570769, fev:12570000,ytd:16140769,paceP:96.8,badge:'p-warn',badgeTxt:'96,8% do pace',gap:'R$83,9MM'},
+        {name:'MJ — Mateus Janisella',   jan:461645,  fev:12790000,ytd:13251645,paceP:79.5,badge:'p-warn',badgeTxt:'79,5% do pace',gap:'R$86,7MM'},
+        {name:'DN — Daniel Noh',         jan:8381495, fev:30000,   ytd:8411495, paceP:50.5,badge:'p-low', badgeTxt:'50,5% do pace',gap:'R$91,6MM'},
+        {name:'NC — Nathan Cohen',       jan:1366352, fev:6250000, ytd:7616352, paceP:45.7,badge:'p-low', badgeTxt:'45,7% do pace',gap:'R$92,4MM'}
+      ],
+      total:{jan:13780261,fev:31640000,ytd:45420000,paceP:68.4,badgeTxt:'68,4% do pace'},
+      prog:[
+        {name:'RI',val:'R$16,1MM · 16,1%',pct:16.1,cls:'mid'},
+        {name:'MJ',val:'R$13,3MM · 13,3%',pct:13.3,cls:'mid'},
+        {name:'DN',val:'R$8,4MM · 8,4%',  pct:8.4, cls:'low'},
+        {name:'NC',val:'R$7,6MM · 7,6%',  pct:7.6, cls:'low'},
+        {name:'Total RTS',val:'R$45,4MM · 11,4%',pct:11.4,cls:'',tot:true}
+      ],
+      note:'RI está no ritmo. DN e NC preocupantes — abaixo de 50% do pace esperado.'
+    },
+    bankers:{
+      metrics:[
+        {cls:'',       label:'AUM Total RTS',    value:'R$ 455MM',note:'Sem gestão'},
+        {cls:'',       label:'Total Clientes',   value:'88',      note:'DN+MJ+NC+RI'},
+        {cls:'mc-up',  label:'Maior Receita Fev',value:'MJ',      note:'R$ 61.508'},
+        {cls:'mc-warn',label:'ROA NC',           value:'0,22%',   note:'⚠ Queda taxa IDB'}
+      ],
+      aumBanker:{labels:['DN','MJ','NC','RI'],data:[118.2,111.0,113.3,112.7]},
+      roaBanker:{labels:['DN','MJ','NC','RI'],
+                 prev:[0.385,0.586,0.272,0.531],prevLabel:'Jan/26',
+                 cur: [0.377,0.553,0.223,0.509],curLabel:'Fev/26'},
+      l3m:{
+        bkColors:{DN:'#5a9e6f',MJ:'#3D754E',NC:'#60a5fa',RI:'#a3d9b1'},
+        bkTotals:{DN:{dez:30958,jan:42778,fev:38892},MJ:{dez:49146,jan:52941,fev:59072},NC:{dez:40547,jan:35044,fev:33329},RI:{dez:48932,jan:45416,fev:47812}},
+        bkBreak:{
+          DN:{labels:['Consultoria','Cons. DU','Banking','Outros'],dez:[28900,1830,0,228],jan:[39129,1779,116,1754],fev:[37124,1768,0,0],colors:['#3D754E','#5a9e6f','#60a5fa','#6b7280']},
+          MJ:{labels:['Consultoria','Cons. DU','Banking','Outros'],dez:[44700,2031,0,2415],jan:[49099,2232,206,3635],fev:[51151,2436,0,7921],colors:['#3D754E','#5a9e6f','#60a5fa','#f0b429']},
+          NC:{labels:['Consultoria','Cons. DU','IDB/Câmbio','Banking'],dez:[33200,1702,5400,245],jan:[25170,1144,9745,129],fev:[21030,1001,12170,129],colors:['#3D754E','#5a9e6f','#f0b429','#60a5fa']},
+          RI:{labels:['Consultoria','Cons. DU','Banking','Outros'],dez:[44900,1981,0,1051],jan:[45241,2056,176,0],fev:[47812,2277,0,0],colors:['#3D754E','#5a9e6f','#60a5fa','#6b7280']}
+        },
+        labels:['Dez/25','Jan/26','Fev/26']
+      },
+      clientTable:[
+        {bk:'MJ',cli:22,aum:'R$111MM',  rpc:'R$2.796',roa:'0,55%'},
+        {bk:'RI',cli:35,aum:'R$112,7MM',rpc:'R$1.431',roa:'0,51%'},
+        {bk:'DN',cli:23,aum:'R$118,2MM',rpc:'R$1.691',roa:'0,38%'},
+        {bk:'NC',cli:8, aum:'R$113,3MM',rpc:'R$4.275',roa:'0,22%'},
+        {bk:'Total',cli:88,aum:'R$455MM',rpc:'R$2.099',roa:'0,41%',tot:true}
+      ],
+      clientNote:'NC tem maior receita por cliente mas ROA mais baixo — AUM elevado com taxa reduzida pelo IDB.'
+    }
+  }
+};
+
+// ===================== CHART REGISTRY =====================
+const charts={};
+function mkChart(id,cfg){if(charts[id]){charts[id].destroy();}charts[id]=new Chart(document.getElementById(id),cfg);}
+
+// ===================== RENDER =====================
+function render(){
+  const d=D[curM];
+  document.getElementById('monthLabel').textContent=d.label;
+  document.getElementById('btnPrev').disabled=(curM===0);
+  document.getElementById('btnNext').disabled=(curM===MONTHS.length-1);
+  renderVisao(d);
+  renderReceita(d);
+  renderCustos(d);
+  renderCaptacao(d);
+  renderBankers(d);
+}
+
+// ---- VISÃO GERAL ----
+function renderVisao(d){
+  const v=d.visao;
+  document.getElementById('page-visao').innerHTML=`
+  <div class="metrics">${v.metrics.map(m=>`<div class="mc ${m.cls}"><div class="mc-label">${m.label}</div><div class="mc-value">${m.value}</div><div class="mc-note">${m.note}</div></div>`).join('')}</div>
   <div class="row2">
     <div class="card">
-      <div class="gbar"></div>
-      <div class="card-title">AUM — Realizado vs Orçado</div>
-      <div class="card-sub">R$ MM · Dez/25, Jan/26, Fev/26</div>
-      <div class="legend">
-        <span class="li"><span class="ld" style="background:#3D754E;"></span>Realizado</span>
-        <span class="li"><span class="ld" style="background:rgba(240,180,41,0.35);border:1px solid #f0b429;"></span>Orçado</span>
-      </div>
+      <div class="gbar"></div><div class="card-title">AUM — Realizado vs Orçado</div>
+      <div class="card-sub">R$ MM</div>
+      <div class="legend"><span class="li"><span class="ld" style="background:#3D754E;"></span>Realizado</span><span class="li"><span class="ld" style="background:rgba(240,180,41,0.35);border:1px solid #f0b429;"></span>Orçado</span></div>
       <div style="position:relative;width:100%;height:220px;"><canvas id="aumOrcChart"></canvas></div>
-      <div class="note">Fev/26: R$582MM realizado vs R$597,5MM orçado — gap de -2,6%.</div>
+      <div class="note">${v.aumOrc.noteText}</div>
     </div>
     <div class="card">
-      <div class="gbar"></div>
-      <div class="card-title">ROA — Realizado vs Orçado</div>
-      <div class="card-sub">ROA Consultoria · Jan/26 e Fev/26</div>
+      <div class="gbar"></div><div class="card-title">ROA — Realizado vs Orçado</div>
+      <div class="card-sub">ROA Consultoria</div>
       <div style="position:relative;width:100%;height:220px;"><canvas id="roaOrcChart"></canvas></div>
-      <div class="warn-note">⚠ ROA abaixo do orçado nos dois meses. Meta: 0,45%.</div>
+      <div class="warn-note">⚠ ROA abaixo do orçado. Meta: 0,45%.</div>
     </div>
   </div>
   <div class="row2e">
     <div class="card">
-      <div class="gbar"></div>
-      <div class="card-title">Receita Líquida vs Lucro Líquido</div>
-      <div class="card-sub">Dez/25, Jan/26 e Fev/26 em R$K</div>
-      <div class="legend">
-        <span class="li"><span class="ld" style="background:#3D754E;"></span>Receita Líquida</span>
-        <span class="li"><span class="ld" style="background:#a3d9b1;"></span>Lucro Líquido</span>
-      </div>
+      <div class="gbar"></div><div class="card-title">Receita Líquida vs Lucro Líquido</div>
+      <div class="card-sub">em R$K</div>
+      <div class="legend"><span class="li"><span class="ld" style="background:#3D754E;"></span>Receita Líquida</span><span class="li"><span class="ld" style="background:#a3d9b1;"></span>Lucro Líquido</span></div>
       <div style="position:relative;width:100%;height:200px;"><canvas id="recLucroChart"></canvas></div>
     </div>
     <div class="card">
-      <div class="gbar"></div>
-      <div class="card-title">Margem Líquida %</div>
+      <div class="gbar"></div><div class="card-title">Margem Líquida %</div>
       <div class="card-sub">Realizado vs Orçado · linha vermelha = limite 40%</div>
       <div style="position:relative;width:100%;height:200px;"><canvas id="margemChart"></canvas></div>
-      <div class="warn-note">⚠ Margem Fev/26: 47,4% — abaixo da meta de 58,2%.</div>
+      <div class="warn-note">${v.marg.alertNote}</div>
     </div>
-  </div>
-</div>
+  </div>`;
 
-<!-- ===== ABA 2: RECEITA ===== -->
-<div id="page-receita" class="page">
-  <div class="metrics">
-    <div class="mc mc-up"><div class="mc-label">Receita Total Fev</div><div class="mc-value">R$ 186K</div><div class="mc-note">▲ 4,1% vs Jan</div></div>
-    <div class="mc"><div class="mc-label">Consultoria RTS</div><div class="mc-value">R$ 157K</div><div class="mc-note">84% da receita total</div></div>
-    <div class="mc"><div class="mc-label">Cross-sell AUGE</div><div class="mc-value">R$ 21,2K</div><div class="mc-note">11% da receita total</div></div>
-    <div class="mc"><div class="mc-label">Receita / DU</div><div class="mc-value">R$ 7.482</div><div class="mc-note">▲ +3,8% real vs Jan</div></div>
-    <div class="mc mc-warn"><div class="mc-label">Campanha BTG</div><div class="mc-value">R$ 0</div><div class="mc-note">⚠ Sem campanha Fev</div></div>
-  </div>
+  mkChart('aumOrcChart',{type:'bar',data:{labels:v.aumOrc.labels,datasets:[
+    {label:'Realizado',data:v.aumOrc.real,backgroundColor:'#3D754E',borderRadius:4},
+    {label:'Orçado',data:v.aumOrc.orc,backgroundColor:'rgba(240,180,41,0.2)',borderRadius:4,borderWidth:1.5,borderColor:'#f0b429'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:500,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+v+'MM'}}}}});
 
-  <!-- Card DU -->
+  mkChart('roaOrcChart',{type:'line',data:{labels:v.roa.labels,datasets:[
+    {label:'Realizado',data:v.roa.real,borderColor:'#3D754E',backgroundColor:'rgba(61,117,78,0.1)',pointBackgroundColor:'#3D754E',tension:0.3,borderWidth:2,pointRadius:4,fill:true},
+    {label:'Orçado',data:v.roa.orc,borderColor:'#f0b429',borderDash:[5,4],pointBackgroundColor:'#f0b429',borderWidth:1.5,pointRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:0.3,max:0.55,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v.toFixed(2)+'%'}}}}});
+
+  mkChart('recLucroChart',{type:'bar',data:{labels:v.recLuc.labels,datasets:[
+    {label:'Receita Líquida',data:v.recLuc.rec,backgroundColor:'#3D754E',borderRadius:4},
+    {label:'Lucro Líquido',data:v.recLuc.luc,backgroundColor:'#a3d9b1',borderRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+v+'K'}}}}});
+
+  const mR=v.marg.real,mC=mR[mR.length-1]<40?'#f87171':'#3D754E',mF=mR[mR.length-1]<40?'rgba(248,113,113,0.1)':'rgba(61,117,78,0.1)';
+  mkChart('margemChart',{type:'line',data:{labels:v.marg.labels,datasets:[
+    {label:'Realizado',data:mR,borderColor:mC,backgroundColor:mF,pointBackgroundColor:mC,tension:0.3,borderWidth:2,pointRadius:4,fill:true},
+    {label:'Orçado',data:v.marg.orc,borderColor:'#f0b429',borderDash:[5,4],pointBackgroundColor:'#f0b429',borderWidth:1.5,pointRadius:4},
+    {label:'Limite 40%',data:v.marg.labels.map(()=>40),borderColor:'rgba(248,113,113,0.5)',borderDash:[3,3],borderWidth:1,pointRadius:0}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:30,max:70,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v+'%'}}}}});
+}
+
+// ---- RECEITA ----
+function renderReceita(d){
+  const r=d.receita;
+  const augeAtivas=r.auge.linhas.filter(l=>Object.values(l.jan).reduce((a,b)=>a+b,0)+Object.values(l.fev).reduce((a,b)=>a+b,0)>0);
+  const totJ=l=>Object.values(l.jan).reduce((a,b)=>a+b,0);
+  const totF=l=>Object.values(l.fev).reduce((a,b)=>a+b,0);
+  const augeLabels=[...augeAtivas.map(l=>l.nome),'Total'];
+  const augeJan=[...augeAtivas.map(totJ),augeAtivas.reduce((s,l)=>s+totJ(l),0)];
+  const augeFev=[...augeAtivas.map(totF),augeAtivas.reduce((s,l)=>s+totF(l),0)];
+  const augeCors=[...augeAtivas.map(l=>l.cor),'#5a9e6f'];
+
+  document.getElementById('page-receita').innerHTML=`
+  <div class="metrics">${r.metrics.map(m=>`<div class="mc ${m.cls}"><div class="mc-label">${m.label}</div><div class="mc-value">${m.value}</div><div class="mc-note">${m.note}</div></div>`).join('')}</div>
   <div class="card row1" style="border-left:3px solid var(--info);border-radius:8px;">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
       <div class="gbar" style="background:var(--info);margin:0;flex-shrink:0;"></div>
@@ -262,64 +593,43 @@ tr:last-child td{border-bottom:none;}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;">
       <div style="background:var(--gray2);border-radius:6px;padding:.75rem;">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Jan/26 — 22 DU</div>
-        <div style="font-size:18px;font-weight:500;">R$ 7.211</div>
-        <div style="font-size:11px;color:var(--muted);">por dia útil</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">${r.du.prev.label}</div>
+        <div style="font-size:18px;font-weight:500;">${r.du.prev.val}</div>
+        <div style="font-size:11px;color:var(--muted);">${r.du.prev.sub}</div>
       </div>
       <div style="background:var(--gray2);border-radius:6px;padding:.75rem;">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Fev/26 — 21 DU</div>
-        <div style="font-size:18px;font-weight:500;color:var(--gl);">R$ 7.482</div>
-        <div style="font-size:11px;color:var(--gl);">▲ +3,8% crescimento real</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">${r.du.cur.label}</div>
+        <div style="font-size:18px;font-weight:500;color:var(--gl);">${r.du.cur.val}</div>
+        <div style="font-size:11px;color:var(--gl);">${r.du.cur.delta}</div>
       </div>
       <div style="background:var(--gray2);border-radius:6px;padding:.75rem;">
         <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Interpretação</div>
-        <div style="font-size:12px;font-weight:500;color:var(--gl);line-height:1.5;">Receita total similar com 1 DU a menos — crescimento real confirmado</div>
+        <div style="font-size:12px;font-weight:500;color:var(--gl);line-height:1.5;">${r.du.info}</div>
       </div>
     </div>
   </div>
-
-  <!-- Receita RTS + AUGE drill -->
   <div class="row2e">
     <div class="card">
-      <div class="gbar"></div>
-      <div class="card-title">RTS — Consultoria e Rec. Financeira</div>
-      <div class="card-sub">Jan e Fev/26 · DU é análise separada, não soma aqui</div>
-      <div class="legend">
-        <span class="li"><span class="ld" style="background:#3D754E;"></span>Consultoria</span>
-        <span class="li"><span class="ld" style="background:#60a5fa;"></span>Rec. Financeira</span>
-      </div>
+      <div class="gbar"></div><div class="card-title">RTS — Consultoria e Rec. Financeira</div>
+      <div class="card-sub">DU é análise separada, não soma aqui</div>
+      <div class="legend"><span class="li"><span class="ld" style="background:#3D754E;"></span>Consultoria</span><span class="li"><span class="ld" style="background:#60a5fa;"></span>Rec. Financeira</span></div>
       <div style="position:relative;width:100%;height:210px;"><canvas id="recRtsChart"></canvas></div>
     </div>
-
-    <!-- AUGE DRILL -->
     <div class="card">
-      <div class="gbar"></div>
-      <div class="card-title">AUGE — Cross-sell por linha de negócio</div>
-      <div class="card-sub">Jan e Fev/26 · dados reais da planilha</div>
+      <div class="gbar"></div><div class="card-title">AUGE — Cross-sell por linha de negócio</div>
+      <div class="card-sub">${r.auge.prevLabel} e ${r.auge.curLabel}</div>
       <div class="hint">↓ Clique em uma linha para ver breakdown por banker</div>
       <div class="legend">
-        <span class="li"><span class="ld" style="background:rgba(61,117,78,0.45);"></span>Jan/26</span>
-        <span class="li"><span class="ld" style="background:#f0b429;"></span>Fev/26</span>
+        <span class="li"><span class="ld" style="background:rgba(61,117,78,0.45);"></span>${r.auge.prevLabel}</span>
+        <span class="li"><span class="ld" style="background:#f0b429;"></span>${r.auge.curLabel}</span>
       </div>
       <div style="position:relative;width:100%;height:170px;"><canvas id="augeTop"></canvas></div>
-      <div class="drill-divider" id="augeDivider">
-        <div class="drill-line"></div>
-        <div class="drill-label">Breakdown: <span class="drill-pill" id="augePill">—</span></div>
-        <div class="drill-line"></div>
-      </div>
-      <div class="bottom-wrap" id="augeBotWrap">
-        <div class="bottom-grid">
-          <div style="position:relative;width:100%;height:200px;"><canvas id="augeBot"></canvas></div>
-          <div class="mini-tbl" id="augeMiniTable"></div>
-        </div>
-      </div>
+      <div class="drill-divider" id="augeDivider"><div class="drill-line"></div><div class="drill-label">Breakdown: <span class="drill-pill" id="augePill">—</span></div><div class="drill-line"></div></div>
+      <div class="bottom-wrap" id="augeBotWrap"><div class="bottom-grid"><div style="position:relative;width:100%;height:200px;"><canvas id="augeBot"></canvas></div><div class="mini-tbl" id="augeMiniTable"></div></div></div>
     </div>
   </div>
-
-  <!-- Tabela por banker -->
   <div class="card row1">
-    <div class="gbar"></div>
-    <div class="card-title">Receita por Banker — Fev/26</div>
+    <div class="gbar"></div><div class="card-title">Receita por Banker — ${d.label}</div>
     <div class="card-sub">Detalhado por linha de produto</div>
     <div class="ctabs">
       <button class="ctab active" onclick="showCtab('rec','all',this)">Todos</button>
@@ -329,317 +639,266 @@ tr:last-child td{border-bottom:none;}
       <button class="ctab" onclick="showCtab('rec','nc',this)">NC</button>
     </div>
     <div id="rec-all" class="ctab-content active">
-      <table><thead><tr><th>Banker</th><th>Consultoria</th><th>Cons. DU</th><th>Cross-sell</th><th>Total Fev</th><th>vs Jan</th></tr></thead>
-      <tbody>
-        <tr><td>MJ</td><td>R$ 51.151</td><td>R$ 2.436</td><td>R$ 7.921</td><td>R$ 61.508</td><td><span class="diff diff-pos">▲ 12%</span></td></tr>
-        <tr><td>RI</td><td>R$ 47.812</td><td>R$ 2.277</td><td>—</td><td>R$ 50.089</td><td><span class="diff diff-pos">▲ 6%</span></td></tr>
-        <tr><td>DN</td><td>R$ 37.124</td><td>R$ 1.768</td><td>—</td><td>R$ 38.892</td><td><span class="diff diff-neg">▼ 13%</span></td></tr>
-        <tr><td>NC</td><td>R$ 21.030</td><td>R$ 1.001</td><td>R$ 13.300</td><td>R$ 34.201</td><td><span class="diff diff-neg">▼ 5%</span></td></tr>
-        <tr class="tr-total"><td>Total</td><td>R$ 157.117</td><td>R$ 7.482</td><td>R$ 21.221</td><td>R$ 184.690</td><td><span class="diff diff-pos">▲ 4%</span></td></tr>
-      </tbody></table>
+      <table><thead><tr><th>Banker</th><th>Consultoria</th><th>Cons. DU</th><th>Cross-sell</th><th>Total ${d.label}</th><th>vs mês ant.</th></tr></thead>
+      <tbody>${r.bankerAll.map(row=>`<tr${row.tot?' class="tr-total"':''}><td>${row.bk}</td><td>${row.consult}</td><td>${row.du}</td><td>${row.cross}</td><td>${row.total}</td><td><span class="diff diff-${row.vc}">${row.var}</span></td></tr>`).join('')}</tbody></table>
     </div>
-    <div id="rec-mj" class="ctab-content"><table><thead><tr><th>Linha</th><th>Jan/26</th><th>Fev/26</th><th>1T26</th></tr></thead><tbody>
-      <tr><td>Consultoria</td><td>R$ 49.099</td><td>R$ 51.151</td><td>R$ 100.251</td></tr>
-      <tr><td>Cross-sell</td><td>R$ 3.635</td><td>R$ 7.921</td><td>R$ 11.556</td></tr>
-      <tr><td>Cons. DU</td><td>R$ 2.232</td><td>R$ 2.436</td><td>R$ 2.436</td></tr>
-      <tr class="tr-total"><td>Total</td><td>R$ 54.966</td><td>R$ 61.508</td><td>R$ 114.243</td></tr>
-    </tbody></table></div>
-    <div id="rec-dn" class="ctab-content"><table><thead><tr><th>Linha</th><th>Jan/26</th><th>Fev/26</th><th>1T26</th></tr></thead><tbody>
-      <tr><td>Consultoria</td><td>R$ 39.129</td><td>R$ 37.124</td><td>R$ 76.253</td></tr>
-      <tr><td>Outros</td><td>R$ 3.533</td><td>—</td><td>R$ 3.533</td></tr>
-      <tr><td>Cons. DU</td><td>R$ 1.779</td><td>R$ 1.768</td><td>R$ 1.768</td></tr>
-      <tr class="tr-total"><td>Total</td><td>R$ 44.441</td><td>R$ 38.892</td><td>R$ 81.554</td></tr>
-    </tbody></table></div>
-    <div id="rec-ri" class="ctab-content"><table><thead><tr><th>Linha</th><th>Jan/26</th><th>Fev/26</th><th>1T26</th></tr></thead><tbody>
-      <tr><td>Consultoria</td><td>R$ 45.241</td><td>R$ 47.812</td><td>R$ 93.053</td></tr>
-      <tr><td>Cons. DU</td><td>R$ 2.056</td><td>R$ 2.277</td><td>R$ 2.277</td></tr>
-      <tr class="tr-total"><td>Total</td><td>R$ 47.297</td><td>R$ 50.089</td><td>R$ 95.330</td></tr>
-    </tbody></table></div>
-    <div id="rec-nc" class="ctab-content"><table><thead><tr><th>Linha</th><th>Jan/26</th><th>Fev/26</th><th>1T26</th></tr></thead><tbody>
-      <tr><td>Consultoria</td><td>R$ 25.170</td><td>R$ 21.030</td><td>R$ 46.199</td></tr>
-      <tr><td>IDB (Câmbio)</td><td>R$ 9.745</td><td>R$ 12.170</td><td>R$ 21.915</td></tr>
-      <tr><td>Cons. DU</td><td>R$ 1.144</td><td>R$ 1.001</td><td>R$ 1.001</td></tr>
-      <tr class="tr-total"><td>Total</td><td>R$ 36.059</td><td>R$ 34.201</td><td>R$ 69.373</td></tr>
-    </tbody></table></div>
-  </div>
-</div>
+    ${['mj','dn','ri','nc'].map(bk=>`<div id="rec-${bk}" class="ctab-content">
+      <table><thead><tr>${r.tabHeaders.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+      <tbody>${r.tabBankers[bk].rows.map((row,i,arr)=>`<tr${i===arr.length-1?' class="tr-total"':''}>${row.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>
+    </div>`).join('')}
+  </div>`;
 
-<!-- ===== ABA 3: CUSTOS ===== -->
-<div id="page-custos" class="page">
-  <div class="metrics">
-    <div class="mc mc-down"><div class="mc-label">Custo Total Fev</div><div class="mc-value">R$ 82,1K</div><div class="mc-note">▲ 6,4% vs Jan</div></div>
-    <div class="mc mc-down"><div class="mc-label">vs Orçado</div><div class="mc-value">+R$ 1,8K</div><div class="mc-note">Orçado: R$ 80,3K</div></div>
-    <div class="mc"><div class="mc-label">Pessoas</div><div class="mc-value">R$ 29,2K</div><div class="mc-note">Orçado: R$ 29,8K</div></div>
-    <div class="mc mc-down"><div class="mc-label">Desp. Administrativas</div><div class="mc-value">R$ 25,7K</div><div class="mc-note">⚠ +37% vs orçado</div></div>
-    <div class="mc"><div class="mc-label">Sistemas</div><div class="mc-value">R$ 12K</div><div class="mc-note">Em linha c/ orçado</div></div>
-    <div class="mc"><div class="mc-label">Consolidação</div><div class="mc-value">R$ 12,1K</div><div class="mc-note">Orçado: R$ 14,2K</div></div>
-  </div>
+  // Charts
+  mkChart('recRtsChart',{type:'bar',data:{labels:r.recRts.labels,datasets:[
+    {label:'Consultoria',data:r.recRts.consult,backgroundColor:'#3D754E',borderRadius:3},
+    {label:'Rec. Financeira',data:r.recRts.fin,backgroundColor:'#60a5fa',borderRadius:3}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{stacked:true,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});
+
+  let augeTopChart,augeBotChart=null,augeCurrentLinha=null;
+  augeTopChart=new Chart(document.getElementById('augeTop'),{type:'bar',data:{labels:augeLabels,datasets:[
+    {label:r.auge.prevLabel,data:augeJan,backgroundColor:'rgba(61,117,78,0.45)',borderRadius:3},
+    {label:r.auge.curLabel, data:augeFev,backgroundColor:augeCors,borderRadius:3}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    onClick(evt,els){if(!els.length)return;const i=els[0].index;if(i<augeAtivas.length)openAugeDrill(augeAtivas[i]);},
+    plugins:{legend:{display:false},tooltip:{callbacks:{footer:()=>['Clique para ver por banker']}}},
+    scales:{x:{grid:{display:false},ticks:{color:'#F9F5EF',font:{size:9},maxRotation:25}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v>=1000?'R$'+(v/1000).toFixed(1)+'K':'R$'+v}}}}});
+
+  function openAugeDrill(linha){
+    if(augeCurrentLinha===linha.nome){
+      document.getElementById('augeBotWrap').classList.remove('open');
+      document.getElementById('augeDivider').classList.remove('visible');
+      augeCurrentLinha=null;
+      augeTopChart.data.datasets[1].backgroundColor=augeCors;augeTopChart.update();return;
+    }
+    augeCurrentLinha=linha.nome;
+    augeTopChart.data.datasets[1].backgroundColor=augeLabels.map((l,i)=>i<augeAtivas.length?(l===linha.nome?augeCors[i]:'rgba(100,100,100,0.25)'):augeCors[i]);
+    augeTopChart.update();
+    const pill=document.getElementById('augePill');pill.textContent=linha.nome;pill.style.background=linha.cor;
+    pill.style.color=['#f0b429','#a3d9b1','#fb923c'].includes(linha.cor)?'#1A1A1B':'#fff';
+    document.getElementById('augeDivider').classList.add('visible');
+    const bankers=Object.keys(linha.jan);
+    const jv=bankers.map(b=>linha.jan[b]||0),fv=bankers.map(b=>linha.fev[b]||0);
+    if(augeBotChart){augeBotChart.destroy();augeBotChart=null;}
+    augeBotChart=new Chart(document.getElementById('augeBot'),{type:'bar',data:{labels:bankers,datasets:[
+      {label:r.auge.prevLabel,data:jv,backgroundColor:'rgba(61,117,78,0.45)',borderRadius:3},
+      {label:r.auge.curLabel, data:fv,backgroundColor:linha.cor,borderRadius:3}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#F9F5EF',font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v>=1000?'R$'+(v/1000).toFixed(2)+'K':'R$'+Math.round(v)}}}}});
+    const fmt=v=>v>0?(v>=1000?'R$'+(v/1000).toFixed(2)+'K':'R$'+Math.round(v)):'<span style="color:#3d3d3e">—</span>';
+    const tj=jv.reduce((a,b)=>a+b,0),tf=fv.reduce((a,b)=>a+b,0);
+    document.getElementById('augeMiniTable').innerHTML=`<table><thead><tr><th>Banker</th><th>${r.auge.prevLabel}</th><th>${r.auge.curLabel}</th><th>Var.</th></tr></thead><tbody>
+      ${bankers.map((b,i)=>{const j=jv[i],f=fv[i];const vp=j>0?((f-j)/j*100).toFixed(0)+'%':f>0?'novo':'—';const vc=f>j?'#5a9e6f':f<j?'#f87171':'#6b7280';
+      return`<tr><td style="color:var(--muted)">${b}</td><td>${fmt(j)}</td><td>${fmt(f)}</td><td style="color:${vc};font-size:10px">${vp}</td></tr>`}).join('')}
+      <tr class="tr-tot"><td>Total</td><td>${fmt(tj)}</td><td>${fmt(tf)}</td><td style="color:${tf>tj?'#5a9e6f':'#f87171'};font-size:10px">${tj>0?((tf-tj)/tj*100).toFixed(0)+'%':'—'}</td></tr>
+      </tbody></table>`;
+    document.getElementById('augeBotWrap').classList.add('open');
+  }
+}
+
+// ---- CUSTOS ----
+function renderCustos(d){
+  const c=d.custos;
+  document.getElementById('page-custos').innerHTML=`
+  <div class="metrics">${c.metrics.map(m=>`<div class="mc ${m.cls}"><div class="mc-label">${m.label}</div><div class="mc-value">${m.value}</div><div class="mc-note">${m.note}</div></div>`).join('')}</div>
   <div class="row2e">
-    <div class="card">
-      <div class="gbar"></div>
-      <div class="card-title">Custos — Realizado vs Orçado</div>
-      <div class="card-sub">Fev/26 por grupo</div>
-      <div class="legend">
-        <span class="li"><span class="ld" style="background:#3D754E;"></span>Realizado</span>
-        <span class="li"><span class="ld" style="background:rgba(240,180,41,0.35);border:1px solid #f0b429;"></span>Orçado</span>
-      </div>
+    <div class="card"><div class="gbar"></div><div class="card-title">Custos — Realizado vs Orçado</div><div class="card-sub">${d.label} por grupo</div>
+      <div class="legend"><span class="li"><span class="ld" style="background:#3D754E;"></span>Realizado</span><span class="li"><span class="ld" style="background:rgba(240,180,41,0.35);border:1px solid #f0b429;"></span>Orçado</span></div>
       <div style="position:relative;width:100%;height:250px;"><canvas id="custosChart"></canvas></div>
     </div>
-    <div class="card">
-      <div class="gbar"></div>
-      <div class="card-title">Variação % vs Orçado — Fev/26</div>
-      <div class="card-sub">Positivo = abaixo do orçado (favorável)</div>
+    <div class="card"><div class="gbar"></div><div class="card-title">Variação % vs Orçado — ${d.label}</div><div class="card-sub">Positivo = abaixo do orçado (favorável)</div>
       <div style="position:relative;width:100%;height:250px;"><canvas id="varChart"></canvas></div>
     </div>
   </div>
   <div class="card row1">
-    <div class="gbar"></div>
-    <div class="card-title">Detalhamento por grupo — clique para expandir</div>
-    <div class="card-sub">Realizado vs Orçado · Fev/26</div>
-    <div class="acc-col-heads">
-      <span class="acc-col-head">Real Fev</span>
-      <span class="acc-col-head">Orc Fev</span>
-      <span class="acc-col-head">Var %</span>
-    </div>
-    <div class="acc-group">
-      <div class="acc-header" onclick="toggleAcc('comercial')"><div class="acc-left"><span class="acc-arrow" id="arr-comercial">▶</span><span class="acc-name">Despesa Comercial</span></div>
-      <div class="acc-vals"><span class="acc-val">-R$ 1.535</span><span class="acc-val">-R$ 4.000</span><span class="acc-var v-pos">+61%</span></div></div>
-      <div class="acc-body" id="body-comercial">
-        <div class="acc-sub"><span class="acc-sub-name">Relacionamento Clientes</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.535</span><span class="acc-sub-val">-R$ 4.000</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">Brindes</span><div class="acc-sub-vals"><span class="acc-sub-val">R$ 0</span><span class="acc-sub-val">R$ 0</span></div></div>
-      </div>
-    </div>
-    <div class="acc-group">
-      <div class="acc-header" onclick="toggleAcc('adm')"><div class="acc-left"><span class="acc-arrow" id="arr-adm">▶</span><span class="acc-name">Despesas Administrativas</span></div>
-      <div class="acc-vals"><span class="acc-val">-R$ 25.738</span><span class="acc-val">-R$ 18.800</span><span class="acc-var v-neg">-37%</span></div></div>
-      <div class="acc-body" id="body-adm">
-        <div class="acc-sub"><span class="acc-sub-name">Custo escritório</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 22.235</span><span class="acc-sub-val">-R$ 14.300</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name" style="padding-left:14px;">↳ Aluguel (pacote)</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 13.425</span><span class="acc-sub-val">-R$ 11.700</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name" style="padding-left:14px;">↳ Manutenção / Materiais</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 8.810</span><span class="acc-sub-val">-R$ 2.600</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">Contabilidade</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 3.100</span><span class="acc-sub-val">-R$ 3.500</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">Jurídico</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 403</span><span class="acc-sub-val">-R$ 1.000</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">Marketing</span><div class="acc-sub-vals"><span class="acc-sub-val">R$ 0</span><span class="acc-sub-val">R$ 0</span></div></div>
-      </div>
-    </div>
-    <div class="acc-group">
-      <div class="acc-header" onclick="toggleAcc('sistemas')"><div class="acc-left"><span class="acc-arrow" id="arr-sistemas">▶</span><span class="acc-name">Sistemas</span></div>
-      <div class="acc-vals"><span class="acc-val">-R$ 12.029</span><span class="acc-val">-R$ 12.050</span><span class="acc-var v-neu">0%</span></div></div>
-      <div class="acc-body" id="body-sistemas">
-        <div class="acc-sub"><span class="acc-sub-name">PBI</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.042</span><span class="acc-sub-val">-R$ 1.200</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">Notion</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 673</span><span class="acc-sub-val">-R$ 1.000</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">Google</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.176</span><span class="acc-sub-val">-R$ 1.300</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">Mycapital</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 213</span><span class="acc-sub-val">-R$ 250</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">Outros (Mais retorno, Adapta, Canva)</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.647</span><span class="acc-sub-val">-R$ 1.500</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">IaaS</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.703</span><span class="acc-sub-val">-R$ 1.500</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">AWS</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 3.919</span><span class="acc-sub-val">-R$ 3.500</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">BPO Financeiro</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.656</span><span class="acc-sub-val">-R$ 1.800</span></div></div>
-      </div>
-    </div>
-    <div class="acc-group">
-      <div class="acc-header" onclick="toggleAcc('consol')"><div class="acc-left"><span class="acc-arrow" id="arr-consol">▶</span><span class="acc-name">Consolidação</span></div>
-      <div class="acc-vals"><span class="acc-val">-R$ 12.094</span><span class="acc-val">-R$ 14.157</span><span class="acc-var v-pos">+17%</span></div></div>
-      <div class="acc-body" id="body-consol">
-        <div class="acc-sub"><span class="acc-sub-name">Regência</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 6.192</span><span class="acc-sub-val">-R$ 8.307</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">Comdinheiro</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 5.902</span><span class="acc-sub-val">-R$ 5.850</span></div></div>
-      </div>
-    </div>
-    <div class="acc-group">
-      <div class="acc-header" onclick="toggleAcc('estrategia')"><div class="acc-left"><span class="acc-arrow" id="arr-estrategia">▶</span><span class="acc-name">Estratégia</span></div>
-      <div class="acc-vals"><span class="acc-val">-R$ 1.500</span><span class="acc-val">-R$ 1.500</span><span class="acc-var v-neu">0%</span></div></div>
-      <div class="acc-body" id="body-estrategia">
-        <div class="acc-sub"><span class="acc-sub-name">Gestão - Infraestrutura</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 1.500</span><span class="acc-sub-val">-R$ 1.500</span></div></div>
-      </div>
-    </div>
-    <div class="acc-group">
-      <div class="acc-header" onclick="toggleAcc('pessoas')"><div class="acc-left"><span class="acc-arrow" id="arr-pessoas">▶</span><span class="acc-name">Pessoas</span></div>
-      <div class="acc-vals"><span class="acc-val">-R$ 29.194</span><span class="acc-val">-R$ 29.750</span><span class="acc-var v-pos">+2%</span></div></div>
-      <div class="acc-body" id="body-pessoas">
-        <div class="acc-sub"><span class="acc-sub-name">Plano de saúde</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 5.554</span><span class="acc-sub-val">-R$ 6.750</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">Salário</span><div class="acc-sub-vals"><span class="acc-sub-val">-R$ 23.640</span><span class="acc-sub-val">-R$ 23.000</span></div></div>
-        <div class="acc-sub"><span class="acc-sub-name">Floor Bankers</span><div class="acc-sub-vals"><span class="acc-sub-val">R$ 0</span><span class="acc-sub-val">R$ 0</span></div></div>
-      </div>
-    </div>
+    <div class="gbar"></div><div class="card-title">Detalhamento por grupo — clique para expandir</div><div class="card-sub">Realizado vs Orçado · ${d.label}</div>
+    <div class="acc-col-heads"><span class="acc-col-head">Real</span><span class="acc-col-head">Orçado</span><span class="acc-col-head">Var %</span></div>
+    ${c.acordeon.map(a=>`<div class="acc-group">
+      <div class="acc-header" onclick="toggleAcc('${a.id}')"><div class="acc-left"><span class="acc-arrow" id="arr-${a.id}">▶</span><span class="acc-name">${a.name}</span></div>
+      <div class="acc-vals"><span class="acc-val">${a.real}</span><span class="acc-val">${a.orc}</span><span class="acc-var ${a.vCls}">${a.var}</span></div></div>
+      <div class="acc-body" id="body-${a.id}">${a.sub.map(s=>`<div class="acc-sub"><span class="acc-sub-name">${s.name}</span><div class="acc-sub-vals"><span class="acc-sub-val">${s.real}</span><span class="acc-sub-val">${s.orc}</span></div></div>`).join('')}</div>
+    </div>`).join('')}
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 8px;border-top:1px solid var(--green);margin-top:4px;">
       <span style="font-size:12px;font-weight:500;color:var(--gl);">Custo Total</span>
-      <div class="acc-vals"><span class="acc-val" style="color:var(--gl);">-R$ 82.089</span><span class="acc-val" style="color:var(--gl);">-R$ 80.257</span><span class="acc-var v-neg">-2%</span></div>
+      <div class="acc-vals"><span class="acc-val" style="color:var(--gl);">${c.totalReal}</span><span class="acc-val" style="color:var(--gl);">${c.totalOrc}</span><span class="acc-var ${c.totalVCls}">${c.totalVar}</span></div>
     </div>
-    <div class="warn-note">⚠ Principal desvio: Desp. Administrativas +37% — manutenção/materiais acima do previsto.</div>
-  </div>
-</div>
+    <div class="${c.totalVCls==='v-neg'?'warn-note':'note'}">${c.warnNote}</div>
+  </div>`;
 
-<!-- ===== ABA 4: CAPTAÇÃO ===== -->
-<div id="page-captacao" class="page">
-  <div class="metrics">
-    <div class="mc mc-up"><div class="mc-label">Captação Total YTD</div><div class="mc-value">R$ 45,4MM</div><div class="mc-note">Meta: R$ 400MM</div></div>
-    <div class="mc"><div class="mc-label">% da Meta Anual</div><div class="mc-value">11,4%</div><div class="mc-note">2 meses de 12</div></div>
-    <div class="mc mc-up"><div class="mc-label">Melhor Fev/26</div><div class="mc-value">MJ — R$12,8MM</div><div class="mc-note">Maior do mês</div></div>
-    <div class="mc"><div class="mc-label">Meta Mensal/Banker</div><div class="mc-value">R$ 8,3MM</div><div class="mc-note">R$100MM ÷ 12</div></div>
-    <div class="mc mc-warn"><div class="mc-label">Gap para Meta</div><div class="mc-value">R$ 354,6MM</div><div class="mc-note">Restam 10 meses</div></div>
-  </div>
+  mkChart('custosChart',{type:'bar',data:{labels:c.chart.labels,datasets:[
+    {label:'Realizado',data:c.chart.real,backgroundColor:'#3D754E',borderRadius:4},
+    {label:'Orçado',data:c.chart.orc,backgroundColor:'rgba(240,180,41,0.22)',borderRadius:4,borderWidth:1.5,borderColor:'#f0b429'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:9},maxRotation:25}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});
+
+  const vv=c.varChart.vals;
+  mkChart('varChart',{type:'bar',data:{labels:c.varChart.labels,datasets:[{data:vv,backgroundColor:vv.map(v=>v>=0?'rgba(90,158,111,0.7)':'rgba(248,113,113,0.7)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:9},maxRotation:25}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v+'%'}}}}});
+}
+
+// ---- CAPTAÇÃO ----
+function renderCaptacao(d){
+  const c=d.captacao;
+  const nMeses=curM+1;
+  const paceEsp=nMeses/12*100;
+
+  document.getElementById('page-captacao').innerHTML=`
+  <div class="metrics">${c.metrics.map(m=>`<div class="mc ${m.cls}"><div class="mc-label">${m.label}</div><div class="mc-value">${m.value}</div><div class="mc-note">${m.note}</div></div>`).join('')}</div>
   <div class="pace-section">
     <div class="pace-header">
       <div class="card-title">Captação por Banker — Pace vs Meta Anual</div>
-      <div class="card-sub" style="margin-bottom:.5rem;">R$100MM/banker · R$8,3MM/mês · linha amarela = pace esperado (2 meses)</div>
+      <div class="card-sub" style="margin-bottom:.5rem;">R$100MM/banker · R$8,3MM/mês · linha amarela = pace esperado (${nMeses} ${nMeses===1?'mês':'meses'})</div>
       <div class="legend" style="margin-bottom:0;">
         <span class="li"><span class="ld" style="background:#5a9e6f;"></span>Jan/26</span>
-        <span class="li"><span class="ld" style="background:#3D754E;"></span>Fev/26</span>
+        ${curM>0?'<span class="li"><span class="ld" style="background:#3D754E;"></span>Fev/26</span>':''}
         <span class="li"><div class="ld-line" style="background:#f0b429;"></div>Pace esperado</span>
         <span class="li"><div class="ld-line" style="background:rgba(255,255,255,0.2);"></div>Meta anual</span>
       </div>
     </div>
     <div class="pace-body">
-      <div class="banker-row">
-        <div class="banker-top"><span class="banker-name">RI — Ricardo Infantozzi</span>
-          <div class="banker-vals"><span class="bv">Jan: <strong>R$3,6MM</strong></span><span class="bv">Fev: <strong>R$12,6MM</strong></span><span class="bv">YTD: <strong>R$16,1MM</strong></span><span class="pace-badge p-warn">96,8% do pace</span></div>
-        </div>
-        <div class="bar-outer"><div class="bar-track"><div class="seg-jan" style="width:3.57%"></div><div class="seg-fev" style="width:12.57%"></div></div>
-          <div class="marker m-pace" style="left:16.67%"><span class="m-label" style="color:#f0b429;">16,7MM</span></div>
-          <div class="marker m-meta" style="left:99.5%"><span class="m-label" style="color:#6b7280;">100MM</span></div>
-        </div>
-        <div class="bar-sub"><span class="bar-pct"><strong style="color:#5a9e6f;">Jan 3,6%</strong> + <strong style="color:#3D754E;">Fev 12,6%</strong></span><span class="bar-pct">Gap: <strong style="color:var(--ow);">R$83,9MM</strong></span></div>
-      </div>
-      <div class="banker-row">
-        <div class="banker-top"><span class="banker-name">MJ — Mateus Janisella</span>
-          <div class="banker-vals"><span class="bv">Jan: <strong>R$0,5MM</strong></span><span class="bv">Fev: <strong>R$12,8MM</strong></span><span class="bv">YTD: <strong>R$13,3MM</strong></span><span class="pace-badge p-warn">79,5% do pace</span></div>
-        </div>
-        <div class="bar-outer"><div class="bar-track"><div class="seg-jan" style="width:0.46%"></div><div class="seg-fev" style="width:12.79%"></div></div>
-          <div class="marker m-pace" style="left:16.67%"><span class="m-label" style="color:#f0b429;">16,7MM</span></div>
-          <div class="marker m-meta" style="left:99.5%"></div>
-        </div>
-        <div class="bar-sub"><span class="bar-pct"><strong style="color:#5a9e6f;">Jan 0,5%</strong> + <strong style="color:#3D754E;">Fev 12,8%</strong></span><span class="bar-pct">Gap: <strong style="color:var(--ow);">R$86,7MM</strong></span></div>
-      </div>
-      <div class="banker-row">
-        <div class="banker-top"><span class="banker-name">DN — Daniel Noh</span>
-          <div class="banker-vals"><span class="bv">Jan: <strong>R$8,4MM</strong></span><span class="bv">Fev: <strong>R$0,03MM</strong></span><span class="bv">YTD: <strong>R$8,4MM</strong></span><span class="pace-badge p-low">50,5% do pace</span></div>
-        </div>
-        <div class="bar-outer"><div class="bar-track"><div class="seg-jan" style="width:8.38%"></div><div class="seg-fev" style="width:0.03%"></div></div>
-          <div class="marker m-pace" style="left:16.67%"><span class="m-label" style="color:#f0b429;">16,7MM</span></div>
-          <div class="marker m-meta" style="left:99.5%"></div>
-        </div>
-        <div class="bar-sub"><span class="bar-pct"><strong style="color:#5a9e6f;">Jan 8,4%</strong> + <strong style="color:#3D754E;">Fev ~0%</strong></span><span class="bar-pct">Gap: <strong style="color:var(--ow);">R$91,6MM</strong></span></div>
-      </div>
-      <div class="banker-row">
-        <div class="banker-top"><span class="banker-name">NC — Nathan Cohen</span>
-          <div class="banker-vals"><span class="bv">Jan: <strong>R$1,4MM</strong></span><span class="bv">Fev: <strong>R$6,3MM</strong></span><span class="bv">YTD: <strong>R$7,6MM</strong></span><span class="pace-badge p-low">45,7% do pace</span></div>
-        </div>
-        <div class="bar-outer"><div class="bar-track"><div class="seg-jan" style="width:1.37%"></div><div class="seg-fev" style="width:6.25%"></div></div>
-          <div class="marker m-pace" style="left:16.67%"><span class="m-label" style="color:#f0b429;">16,7MM</span></div>
-          <div class="marker m-meta" style="left:99.5%"></div>
-        </div>
-        <div class="bar-sub"><span class="bar-pct"><strong style="color:#5a9e6f;">Jan 1,4%</strong> + <strong style="color:#3D754E;">Fev 6,3%</strong></span><span class="bar-pct">Gap: <strong style="color:var(--ow);">R$92,4MM</strong></span></div>
-      </div>
+      ${c.bankers.map(b=>{
+        const janW=(b.jan/1e8*100).toFixed(2)+'%';
+        const fevW=(b.fev/1e8*100).toFixed(2)+'%';
+        return`<div class="banker-row">
+          <div class="banker-top"><span class="banker-name">${b.name}</span>
+            <div class="banker-vals">
+              <span class="bv">Jan: <strong>R$${(b.jan/1e6).toFixed(1)}MM</strong></span>
+              ${curM>0?`<span class="bv">Fev: <strong>R$${(b.fev/1e6).toFixed(1)}MM</strong></span>`:''}
+              <span class="bv">YTD: <strong>R$${(b.ytd/1e6).toFixed(1)}MM</strong></span>
+              <span class="pace-badge ${b.badge}">${b.badgeTxt}</span>
+            </div>
+          </div>
+          <div class="bar-outer"><div class="bar-track"><div class="seg-jan" style="width:${janW}"></div>${curM>0?`<div class="seg-fev" style="width:${fevW}"></div>`:''}</div>
+            <div class="marker m-pace" style="left:${paceEsp.toFixed(1)}%"><span class="m-label" style="color:#f0b429;">${(paceEsp/100*100).toFixed(0)}MM</span></div>
+            <div class="marker m-meta" style="left:99.5%"><span class="m-label" style="color:#6b7280;">100MM</span></div>
+          </div>
+          <div class="bar-sub"><span class="bar-pct"><strong style="color:#5a9e6f;">Jan ${(b.jan/1e6).toFixed(1)}%</strong>${curM>0?` + <strong style="color:#3D754E;">Fev ${(b.fev/1e6).toFixed(1)}%</strong>`:''}</span><span class="bar-pct">Gap: <strong style="color:var(--ow);">${b.gap}</strong></span></div>
+        </div>`;
+      }).join('')}
       <div class="pace-divider"></div>
       <div class="total-block">
         <div class="total-top">
           <span style="font-size:12px;font-weight:500;color:var(--gl);">Total RTS</span>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <span style="font-size:11px;color:var(--muted);">Jan: <strong style="color:#5a9e6f;">R$13,8MM</strong></span>
-            <span style="font-size:11px;color:var(--muted);">Fev: <strong style="color:var(--green);">R$31,6MM</strong></span>
-            <span style="font-size:11px;color:var(--muted);">YTD: <strong style="color:#5a9e6f;">R$45,4MM</strong></span>
-            <span class="pace-badge p-warn">68,4% do pace</span>
+            <span style="font-size:11px;color:var(--muted);">Jan: <strong style="color:#5a9e6f;">R$${(c.total.jan/1e6).toFixed(1)}MM</strong></span>
+            ${curM>0?`<span style="font-size:11px;color:var(--muted);">Fev: <strong style="color:var(--green);">R$${(c.total.fev/1e6).toFixed(1)}MM</strong></span>`:''}
+            <span style="font-size:11px;color:var(--muted);">YTD: <strong style="color:#5a9e6f;">R$${(c.total.ytd/1e6).toFixed(1)}MM</strong></span>
+            <span class="pace-badge p-warn">${c.total.badgeTxt}</span>
           </div>
         </div>
         <div class="total-bar-outer">
           <div class="total-track">
-            <div style="height:100%;background:#5a9e6f;width:3.44%;border-radius:6px 0 0 6px;"></div>
-            <div style="height:100%;background:#3D754E;width:7.91%;border-radius:0 4px 4px 0;"></div>
+            <div style="height:100%;background:#5a9e6f;width:${(c.total.jan/1e9*100).toFixed(2)}%;border-radius:6px 0 0 6px;"></div>
+            ${curM>0?`<div style="height:100%;background:#3D754E;width:${(c.total.fev/1e9*100).toFixed(2)}%;border-radius:0 4px 4px 0;"></div>`:''}
           </div>
-          <div class="marker m-pace" style="left:16.67%;top:-3px;height:calc(100% + 6px);"></div>
+          <div class="marker m-pace" style="left:${paceEsp.toFixed(1)}%;top:-3px;height:calc(100% + 6px);"></div>
           <div class="marker m-meta" style="left:99.5%;top:-3px;height:calc(100% + 6px);"></div>
         </div>
         <div class="total-sub">
-          <span style="font-size:10px;color:var(--gl);">11,4% da meta anual concluído</span>
-          <span style="font-size:10px;color:var(--warn);">Pace esperado: 16,7% · Gap: R$354,6MM</span>
+          <span style="font-size:10px;color:var(--gl);">${(c.total.ytd/4e8*100).toFixed(1)}% da meta anual concluído</span>
+          <span style="font-size:10px;color:var(--warn);">Pace esperado: ${paceEsp.toFixed(1)}% · Gap: R$${((4e8-c.total.ytd)/1e6).toFixed(1)}MM</span>
         </div>
       </div>
     </div>
   </div>
   <div class="card row1">
-    <div class="gbar"></div>
-    <div class="card-title">Progresso vs Meta Anual</div>
-    <div class="card-sub">R$100MM por banker · YTD Jan–Fev/26 · ritmo esperado: 16,7%</div>
+    <div class="gbar"></div><div class="card-title">Progresso vs Meta Anual</div>
+    <div class="card-sub">R$100MM por banker · YTD · ritmo esperado: ${paceEsp.toFixed(1)}%</div>
     <div style="margin-top:.75rem;">
-      <div class="prog-wrap"><div class="prog-label"><span class="prog-name">RI</span><span class="prog-val">R$16,1MM · 16,1%</span></div><div class="prog-bar"><div class="prog-fill mid" style="width:16.1%"></div></div></div>
-      <div class="prog-wrap"><div class="prog-label"><span class="prog-name">MJ</span><span class="prog-val">R$13,3MM · 13,3%</span></div><div class="prog-bar"><div class="prog-fill mid" style="width:13.3%"></div></div></div>
-      <div class="prog-wrap"><div class="prog-label"><span class="prog-name">DN</span><span class="prog-val">R$8,4MM · 8,4%</span></div><div class="prog-bar"><div class="prog-fill low" style="width:8.4%"></div></div></div>
-      <div class="prog-wrap"><div class="prog-label"><span class="prog-name">NC</span><span class="prog-val">R$7,6MM · 7,6%</span></div><div class="prog-bar"><div class="prog-fill low" style="width:7.6%"></div></div></div>
-      <div class="prog-wrap" style="margin-top:.75rem;"><div class="prog-label"><span class="prog-name" style="color:var(--gl);">Total RTS</span><span class="prog-val" style="color:var(--gl);">R$45,4MM · 11,4%</span></div><div class="prog-bar"><div class="prog-fill" style="width:11.4%"></div></div></div>
+      ${c.prog.map(p=>`<div class="prog-wrap"><div class="prog-label"><span class="prog-name"${p.tot?' style="color:var(--gl);"':''}>${p.name}</span><span class="prog-val"${p.tot?' style="color:var(--gl);"':''}>${p.val}</span></div><div class="prog-bar"><div class="prog-fill ${p.cls}" style="width:${p.pct}%"></div></div></div>`).join('')}
     </div>
-    <div class="note">RI está no ritmo. DN e NC preocupantes — abaixo de 50% do pace esperado.</div>
-  </div>
-</div>
+    <div class="note">${c.note}</div>
+  </div>`;
+}
 
-<!-- ===== ABA 5: BANKERS ===== -->
-<div id="page-bankers" class="page">
-  <div class="metrics">
-    <div class="mc"><div class="mc-label">AUM Total RTS</div><div class="mc-value">R$ 455MM</div><div class="mc-note">Sem gestão</div></div>
-    <div class="mc"><div class="mc-label">Total Clientes</div><div class="mc-value">88</div><div class="mc-note">DN+MJ+NC+RI</div></div>
-    <div class="mc mc-up"><div class="mc-label">Maior Receita Fev</div><div class="mc-value">MJ</div><div class="mc-note">R$ 61.508</div></div>
-    <div class="mc mc-warn"><div class="mc-label">ROA NC</div><div class="mc-value">0,22%</div><div class="mc-note">⚠ Queda taxa IDB</div></div>
-  </div>
+// ---- BANKERS ----
+function renderBankers(d){
+  const b=d.bankers;
+  const l=b.l3m;
+  const bankers=['DN','MJ','NC','RI'];
+  document.getElementById('page-bankers').innerHTML=`
+  <div class="metrics">${b.metrics.map(m=>`<div class="mc ${m.cls}"><div class="mc-label">${m.label}</div><div class="mc-value">${m.value}</div><div class="mc-note">${m.note}</div></div>`).join('')}</div>
   <div class="row2e">
-    <div class="card">
-      <div class="gbar"></div>
-      <div class="card-title">AUM por Banker — Fev/26</div>
-      <div class="card-sub">Custódia sob assessoria (R$ MM)</div>
+    <div class="card"><div class="gbar"></div><div class="card-title">AUM por Banker — ${d.label}</div><div class="card-sub">Custódia sob assessoria (R$ MM)</div>
       <div style="position:relative;width:100%;height:210px;"><canvas id="aumBankerChart"></canvas></div>
     </div>
-    <div class="card">
-      <div class="gbar"></div>
-      <div class="card-title">ROA Consultoria por Banker</div>
-      <div class="card-sub">Jan vs Fev/26</div>
+    <div class="card"><div class="gbar"></div><div class="card-title">ROA Consultoria por Banker</div><div class="card-sub">${b.roaBanker.prevLabel} vs ${b.roaBanker.curLabel}</div>
       <div style="position:relative;width:100%;height:210px;"><canvas id="roaBankerChart"></canvas></div>
-      <div class="warn-note">⚠ ROA NC caiu — impacto IDB (taxa 0,3% → 0,2%).</div>
+      <div class="warn-note">⚠ ROA NC caiu — impacto IDB.</div>
     </div>
   </div>
-
-  <!-- BANKER DRILL DOWN -->
   <div class="card row1">
-    <div class="gbar"></div>
-    <div class="card-title">Receita Banker — L3M + Breakdown por linha</div>
-    <div class="card-sub">Dez/25, Jan/26 e Fev/26 · clique em um banker para ver detalhamento</div>
+    <div class="gbar"></div><div class="card-title">Receita Banker — L3M + Breakdown por linha</div>
+    <div class="card-sub">${l.labels.join(', ')} · clique em um banker para ver detalhamento</div>
     <div class="hint">↓ Clique em qualquer barra para expandir o detalhamento por linha</div>
     <div class="legend">
       <span class="li"><span class="ld" style="background:rgba(61,117,78,0.2);border:1px solid #3D754E;"></span>Dez/25</span>
-      <span class="li"><span class="ld" style="background:rgba(61,117,78,0.55);"></span>Jan/26</span>
-      <span class="li"><span class="ld" style="background:#3D754E;"></span>Fev/26</span>
+      ${l.labels.map((lbl,i)=>i>0?`<span class="li"><span class="ld" style="background:rgba(61,117,78,${0.3+i*0.25});"></span>${lbl}</span>`:''  ).join('')}
     </div>
     <div style="position:relative;width:100%;height:200px;"><canvas id="l3mTop"></canvas></div>
-    <div class="drill-divider" id="l3mDivider">
-      <div class="drill-line"></div>
-      <div class="drill-label">Detalhamento: <span class="drill-pill" id="l3mPill">—</span></div>
-      <div class="drill-line"></div>
-    </div>
+    <div class="drill-divider" id="l3mDivider"><div class="drill-line"></div><div class="drill-label">Detalhamento: <span class="drill-pill" id="l3mPill">—</span></div><div class="drill-line"></div></div>
     <div class="bottom-wrap" id="l3mBotWrap">
       <div class="legend" id="l3mLegend" style="margin-bottom:8px;"></div>
-      <div class="bottom-grid">
-        <div style="position:relative;width:100%;height:220px;"><canvas id="l3mBot"></canvas></div>
-        <div class="mini-tbl" id="l3mMiniTable"></div>
-      </div>
+      <div class="bottom-grid"><div style="position:relative;width:100%;height:220px;"><canvas id="l3mBot"></canvas></div><div class="mini-tbl" id="l3mMiniTable"></div></div>
     </div>
   </div>
-
   <div class="card row1">
-    <div class="gbar"></div>
-    <div class="card-title">Clientes e Receita média por Cliente — Fev/26</div>
-    <div class="card-sub"></div>
-    <table>
-      <thead><tr><th>Banker</th><th>Clientes</th><th>AUM (MM)</th><th>Rec/Cliente</th><th>ROA</th></tr></thead>
-      <tbody>
-        <tr><td>MJ</td><td>22</td><td>R$111MM</td><td>R$2.796</td><td>0,55%</td></tr>
-        <tr><td>RI</td><td>35</td><td>R$112,7MM</td><td>R$1.431</td><td>0,51%</td></tr>
-        <tr><td>DN</td><td>23</td><td>R$118,2MM</td><td>R$1.691</td><td>0,38%</td></tr>
-        <tr><td>NC</td><td>8</td><td>R$113,3MM</td><td>R$4.275</td><td>0,22%</td></tr>
-        <tr class="tr-total"><td>Total</td><td>88</td><td>R$455MM</td><td>R$2.099</td><td>0,41%</td></tr>
-      </tbody>
-    </table>
-    <div class="note">NC tem maior receita por cliente mas ROA mais baixo — AUM elevado com taxa reduzida pelo IDB.</div>
-  </div>
-</div>
+    <div class="gbar"></div><div class="card-title">Clientes e Receita média por Cliente — ${d.label}</div>
+    <table><thead><tr><th>Banker</th><th>Clientes</th><th>AUM (MM)</th><th>Rec/Cliente</th><th>ROA</th></tr></thead>
+    <tbody>${b.clientTable.map(row=>`<tr${row.tot?' class="tr-total"':''}><td>${row.bk}</td><td>${row.cli}</td><td>${row.aum}</td><td>${row.rpc}</td><td>${row.roa}</td></tr>`).join('')}</tbody></table>
+    <div class="note">${b.clientNote}</div>
+  </div>`;
 
-<script>
-const gc='rgba(255,255,255,0.07)',lc='#6b7280';
+  mkChart('aumBankerChart',{type:'bar',data:{labels:b.aumBanker.labels,datasets:[{data:b.aumBanker.data,backgroundColor:['#3D754E','#5a9e6f','#3D754E','#5a9e6f'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:80,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+v+'MM'}}}}});
+  mkChart('roaBankerChart',{type:'bar',data:{labels:b.roaBanker.labels,datasets:[
+    {label:b.roaBanker.prevLabel,data:b.roaBanker.prev,backgroundColor:'rgba(61,117,78,0.4)',borderRadius:3},
+    {label:b.roaBanker.curLabel, data:b.roaBanker.cur, backgroundColor:'#3D754E',borderRadius:3}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v.toFixed(2)+'%'}}}}});
 
+  // L3M
+  const l3mDatasets=[
+    {label:'Dez/25',data:bankers.map(bk=>l.bkTotals[bk].dez),backgroundColor:'rgba(61,117,78,0.2)',borderRadius:3,borderWidth:1,borderColor:'#3D754E'},
+    {label:l.labels[0],data:bankers.map(bk=>l.bkTotals[bk].jan),backgroundColor:'rgba(61,117,78,0.55)',borderRadius:3}
+  ];
+  if(l.labels[1]) l3mDatasets.push({label:l.labels[1],data:bankers.map(bk=>l.bkTotals[bk].fev),backgroundColor:bankers.map(bk=>l.bkColors[bk]),borderRadius:3});
+
+  let l3mBotChart=null,l3mCurrent=null;
+  const l3mTop=new Chart(document.getElementById('l3mTop'),{type:'bar',data:{labels:bankers,datasets:l3mDatasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      onClick(evt,els){if(!els.length)return;openL3mDrill(bankers[els[0].index]);},
+      plugins:{legend:{display:false},tooltip:{callbacks:{footer:()=>['Clique para ver breakdown por linha']}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#F9F5EF',font:{size:12,weight:'500'}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});
+
+  function openL3mDrill(banker){
+    if(l3mCurrent===banker){
+      document.getElementById('l3mBotWrap').classList.remove('open');
+      document.getElementById('l3mDivider').classList.remove('visible');
+      l3mCurrent=null;
+      if(l.labels[1]) l3mTop.data.datasets[2].backgroundColor=bankers.map(bk=>l.bkColors[bk]);
+      l3mTop.update();return;
+    }
+    l3mCurrent=banker;
+    if(l.labels[1]) l3mTop.data.datasets[2].backgroundColor=bankers.map(bk=>bk===banker?l.bkColors[bk]:'rgba(61,117,78,0.2)');
+    l3mTop.update();
+    const pill=document.getElementById('l3mPill');pill.textContent=banker;pill.style.background=l.bkColors[banker];
+    pill.style.color=['#a3d9b1','#5a9e6f'].includes(l.bkColors[banker])?'#1A1A1B':'#fff';
+    document.getElementById('l3mDivider').classList.add('visible');
+    const bkd=l.bkBreak[banker];
+    document.getElementById('l3mLegend').innerHTML=bkd.labels.map((lb,i)=>`<span class="li"><span class="ld" style="background:${bkd.colors[i]};"></span>${lb}</span>`).join('');
+    if(l3mBotChart){l3mBotChart.destroy();l3mBotChart=null;}
+    const hasF=l.labels[1];
+    l3mBotChart=new Chart(document.getElementById('l3mBot'),{type:'bar',
+      data:{labels:hasF?['Dez/25',l.labels[0],l.labels[1]]:['Dez/25',l.labels[0]],
+            datasets:bkd.labels.map((label,i)=>({label,data:hasF?[bkd.dez[i],bkd.jan[i],bkd.fev[i]]:[bkd.dez[i],bkd.jan[i]],backgroundColor:bkd.colors[i],borderRadius:3}))},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});
+    const fmt2=v=>(v&&v>0)?'R$'+(v>=1000?(v/1000).toFixed(1)+'K':Math.round(v)):'<span style="color:#3d3d3e">—</span>';
+    const tot=l.bkTotals[banker];
+    document.getElementById('l3mMiniTable').innerHTML=`<table><thead><tr><th>Linha</th><th>Dez</th><th>${l.labels[0]}</th>${hasF?`<th>${l.labels[1]}</th>`:''}</tr></thead>
+      <tbody>${bkd.labels.map((lb,i)=>`<tr><td style="color:var(--muted);display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:2px;background:${bkd.colors[i]};flex-shrink:0;display:inline-block;"></span>${lb}</td><td>${fmt2(bkd.dez[i])}</td><td>${fmt2(bkd.jan[i])}</td>${hasF?`<td>${fmt2(bkd.fev[i])}</td>`:''}</tr>`).join('')}
+      <tr class="tr-tot"><td>Total</td><td>${fmt2(tot.dez)}</td><td>${fmt2(tot.jan)}</td>${hasF?`<td>${fmt2(tot.fev)}</td>`:''}</tr>
+      </tbody></table>`;
+    document.getElementById('l3mBotWrap').classList.add('open');
+  }
+}
+
+// ===================== NAV =====================
 function showPage(id,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -657,165 +916,14 @@ function toggleAcc(id){
   document.getElementById('body-'+id).classList.toggle('open');
   document.getElementById('arr-'+id).classList.toggle('open');
 }
-
-// Margem condicional
-if(47.4<40){document.getElementById('mc-margem').classList.remove('mc-warn');document.getElementById('margem-val').style.color='var(--danger)';}
-
-// ===== VISÃO GERAL =====
-new Chart(document.getElementById('aumOrcChart'),{type:'bar',data:{labels:['Dez/25','Jan/26','Fev/26'],datasets:[
-  {label:'Realizado',data:[544.5,567.4,582.0],backgroundColor:'#3D754E',borderRadius:4},
-  {label:'Orçado',data:[null,575,597.5],backgroundColor:'rgba(240,180,41,0.2)',borderRadius:4,borderWidth:1.5,borderColor:'#f0b429'}
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:500,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+v+'MM'}}}}});
-
-new Chart(document.getElementById('roaOrcChart'),{type:'line',data:{labels:['Dez/25','Jan/26','Fev/26'],datasets:[
-  {label:'Realizado',data:[0.43,0.437,0.41],borderColor:'#3D754E',backgroundColor:'rgba(61,117,78,0.1)',pointBackgroundColor:'#3D754E',tension:0.3,borderWidth:2,pointRadius:4,fill:true},
-  {label:'Orçado',data:[null,0.45,0.45],borderColor:'#f0b429',borderDash:[5,4],pointBackgroundColor:'#f0b429',borderWidth:1.5,pointRadius:4}
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:0.3,max:0.55,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v.toFixed(2)+'%'}}}}});
-
-new Chart(document.getElementById('recLucroChart'),{type:'bar',data:{labels:['Dez/25','Jan/26','Fev/26'],datasets:[
-  {label:'Receita Líquida',data:[181.8,149.8,156.0],backgroundColor:'#3D754E',borderRadius:4},
-  {label:'Lucro Líquido',data:[104.8,72.6,73.9],backgroundColor:'#a3d9b1',borderRadius:4}
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+v+'K'}}}}});
-
-const mR=[57.7,48.5,47.4],mC=mR[2]<40?'#f87171':'#3D754E',mF=mR[2]<40?'rgba(248,113,113,0.1)':'rgba(61,117,78,0.1)';
-new Chart(document.getElementById('margemChart'),{type:'line',data:{labels:['Dez/25','Jan/26','Fev/26'],datasets:[
-  {label:'Realizado',data:mR,borderColor:mC,backgroundColor:mF,pointBackgroundColor:mC,tension:0.3,borderWidth:2,pointRadius:4,fill:true},
-  {label:'Orçado',data:[null,55.6,58.2],borderColor:'#f0b429',borderDash:[5,4],pointBackgroundColor:'#f0b429',borderWidth:1.5,pointRadius:4},
-  {label:'Limite 40%',data:[40,40,40],borderColor:'rgba(248,113,113,0.5)',borderDash:[3,3],borderWidth:1,pointRadius:0}
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:30,max:70,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v+'%'}}}}});
-
-// ===== RECEITA: RTS (sem DU) =====
-new Chart(document.getElementById('recRtsChart'),{type:'bar',data:{labels:['Jan/26','Fev/26'],datasets:[
-  {label:'Consultoria',data:[158639,157117],backgroundColor:'#3D754E',borderRadius:3},
-  {label:'Rec. Financeira',data:[2880,1723],backgroundColor:'#60a5fa',borderRadius:3}
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{stacked:true,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});
-
-// ===== AUGE DRILL =====
-const augeLINHAS=[
-  {nome:'Banking',cor:'#60a5fa',jan:{RI:175.6,MJ:66.98,NC:128.91,DN:116.05,"PJ's":139.49},fev:{RI:0,MJ:0,NC:0,DN:0,"PJ's":0}},
-  {nome:'Câmbio/IDB',cor:'#f0b429',jan:{IDB:9745.14},fev:{IDB:12170.09}},
-  {nome:'Consórcio',cor:'#a3d9b1',jan:{RI:0,MJ:1733,NC:0,DN:0},fev:{RI:0,MJ:6018.53,NC:0,DN:0}},
-  {nome:'Seguros',cor:'#c084fc',jan:{RI:0,MJ:1902.43,NC:0,DN:0},fev:{RI:0,MJ:1902.43,NC:0,DN:0}},
-  {nome:'Financiamento',cor:'#fb923c',jan:{RI:0,MJ:0,NC:0,DN:2477.64},fev:{RI:0,MJ:0,NC:0,DN:0}},
-  {nome:'Offshore',cor:'#94a3b8',jan:{RI:0,MJ:0,NC:0,DN:1055.28},fev:{RI:0,MJ:0,NC:0,DN:0}},
-];
-const augeAtivas=augeLINHAS.filter(l=>Object.values(l.jan).reduce((a,b)=>a+b,0)+Object.values(l.fev).reduce((a,b)=>a+b,0)>0);
-const totJ=l=>Object.values(l.jan).reduce((a,b)=>a+b,0);
-const totF=l=>Object.values(l.fev).reduce((a,b)=>a+b,0);
-
-// Adicionar total como última entrada
-const augeLabels=[...augeAtivas.map(l=>l.nome),'Total'];
-const augeJan=[...augeAtivas.map(totJ), augeAtivas.reduce((s,l)=>s+totJ(l),0)];
-const augeFev=[...augeAtivas.map(totF), augeAtivas.reduce((s,l)=>s+totF(l),0)];
-const augeCors=[...augeAtivas.map(l=>l.cor),'#5a9e6f'];
-
-const augeTopChart=new Chart(document.getElementById('augeTop'),{type:'bar',data:{labels:augeLabels,datasets:[
-  {label:'Jan/26',data:augeJan,backgroundColor:'rgba(61,117,78,0.45)',borderRadius:3},
-  {label:'Fev/26',data:augeFev,backgroundColor:augeCors,borderRadius:3}
-]},options:{responsive:true,maintainAspectRatio:false,
-  onClick(evt,els){if(!els.length)return;const i=els[0].index;if(i<augeAtivas.length)openAugeDrill(augeAtivas[i]);},
-  plugins:{legend:{display:false},tooltip:{callbacks:{footer:()=>['Clique para ver por banker']}}},
-  scales:{x:{grid:{display:false},ticks:{color:'#F9F5EF',font:{size:9},maxRotation:25}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v>=1000?'R$'+(v/1000).toFixed(1)+'K':'R$'+v}}}}});
-
-let augeBotChart=null,augeCurrentLinha=null;
-function openAugeDrill(linha){
-  if(augeCurrentLinha===linha.nome){
-    document.getElementById('augeBotWrap').classList.remove('open');
-    document.getElementById('augeDivider').classList.remove('visible');
-    augeCurrentLinha=null;
-    augeTopChart.data.datasets[1].backgroundColor=augeCors;
-    augeTopChart.update();return;
-  }
-  augeCurrentLinha=linha.nome;
-  augeTopChart.data.datasets[1].backgroundColor=augeLabels.map((l,i)=>i<augeAtivas.length?(l===linha.nome?augeCors[i]:'rgba(100,100,100,0.25)'):augeCors[i]);
-  augeTopChart.update();
-  const pill=document.getElementById('augePill');
-  pill.textContent=linha.nome;pill.style.background=linha.cor;
-  pill.style.color=['#f0b429','#a3d9b1','#fb923c'].includes(linha.cor)?'#1A1A1B':'#fff';
-  document.getElementById('augeDivider').classList.add('visible');
-  const bankers=Object.keys(linha.jan);
-  const jv=bankers.map(b=>linha.jan[b]||0),fv=bankers.map(b=>linha.fev[b]||0);
-  if(augeBotChart){augeBotChart.destroy();augeBotChart=null;}
-  augeBotChart=new Chart(document.getElementById('augeBot'),{type:'bar',data:{labels:bankers,datasets:[
-    {label:'Jan/26',data:jv,backgroundColor:'rgba(61,117,78,0.45)',borderRadius:3},
-    {label:'Fev/26',data:fv,backgroundColor:linha.cor,borderRadius:3}
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},
-    scales:{x:{grid:{display:false},ticks:{color:'#F9F5EF',font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v>=1000?'R$'+(v/1000).toFixed(2)+'K':'R$'+Math.round(v)}}}}});
-  const fmt=v=>v>0?(v>=1000?'R$'+(v/1000).toFixed(2)+'K':'R$'+Math.round(v)):'<span style="color:#3d3d3e">—</span>';
-  const tj=jv.reduce((a,b)=>a+b,0),tf=fv.reduce((a,b)=>a+b,0);
-  document.getElementById('augeMiniTable').innerHTML=`<table>
-    <thead><tr><th>Banker</th><th>Jan</th><th>Fev</th><th>Var.</th></tr></thead>
-    <tbody>${bankers.map((b,i)=>{const j=jv[i],f=fv[i];const vp=j>0?((f-j)/j*100).toFixed(0)+'%':f>0?'novo':'—';const vc=f>j?'#5a9e6f':f<j?'#f87171':'#6b7280';
-    return`<tr><td style="color:var(--muted)">${b}</td><td>${fmt(j)}</td><td>${fmt(f)}</td><td style="color:${vc};font-size:10px">${vp}</td></tr>`}).join('')}
-    <tr class="tr-tot"><td>Total</td><td>${fmt(tj)}</td><td>${fmt(tf)}</td><td style="color:${tf>tj?'#5a9e6f':'#f87171'};font-size:10px">${tj>0?((tf-tj)/tj*100).toFixed(0)+'%':'—'}</td></tr>
-    </tbody></table>`;
-  document.getElementById('augeBotWrap').classList.add('open');
+function changeMonth(dir){
+  const n=curM+dir;
+  if(n<0||n>=MONTHS.length)return;
+  curM=n;
+  render();
 }
 
-// ===== CUSTOS =====
-new Chart(document.getElementById('custosChart'),{type:'bar',data:{labels:['Desp.Adm','Pessoas','Sistemas','Consolidação','Comercial','Estratégia'],datasets:[
-  {label:'Realizado',data:[25738,29194,12029,12094,1535,1500],backgroundColor:'#3D754E',borderRadius:4},
-  {label:'Orçado',data:[18800,29750,12050,14157,4000,1500],backgroundColor:'rgba(240,180,41,0.22)',borderRadius:4,borderWidth:1.5,borderColor:'#f0b429'}
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:9},maxRotation:25}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});
-const vv=[-37,2,0,17,61,0];
-new Chart(document.getElementById('varChart'),{type:'bar',data:{labels:['Desp.Adm','Pessoas','Sistemas','Consolidação','Comercial','Estratégia'],datasets:[{data:vv,backgroundColor:vv.map(v=>v>=0?'rgba(90,158,111,0.7)':'rgba(248,113,113,0.7)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:9},maxRotation:25}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v+'%'}}}}});
-
-// ===== BANKERS =====
-new Chart(document.getElementById('aumBankerChart'),{type:'bar',data:{labels:['DN','MJ','NC','RI'],datasets:[{data:[118.2,111.0,113.3,112.7],backgroundColor:['#3D754E','#5a9e6f','#3D754E','#5a9e6f'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:100,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+v+'MM'}}}}});
-new Chart(document.getElementById('roaBankerChart'),{type:'bar',data:{labels:['DN','MJ','NC','RI'],datasets:[
-  {label:'Jan/26',data:[0.385,0.586,0.272,0.531],backgroundColor:'rgba(61,117,78,0.4)',borderRadius:3},
-  {label:'Fev/26',data:[0.377,0.553,0.223,0.509],backgroundColor:'#3D754E',borderRadius:3}
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v.toFixed(2)+'%'}}}}});
-
-// ===== BANKER L3M DRILL =====
-const bkColors={DN:'#5a9e6f',MJ:'#3D754E',NC:'#60a5fa',RI:'#a3d9b1'};
-const bkL3m={DN:{dez:30958,jan:42778,fev:38892},MJ:{dez:49146,jan:52941,fev:59072},NC:{dez:40547,jan:35044,fev:33329},RI:{dez:48932,jan:45416,fev:47812}};
-const bkBreak={
-  DN:{labels:['Consultoria','Cons. DU','Banking','Outros'],dez:[28900,1830,0,228],jan:[39129,1779,116,1754],fev:[37124,1768,0,0],colors:['#3D754E','#5a9e6f','#60a5fa','#6b7280']},
-  MJ:{labels:['Consultoria','Cons. DU','Banking','Outros'],dez:[44700,2031,0,2415],jan:[49099,2232,206,3635],fev:[51151,2436,0,7921],colors:['#3D754E','#5a9e6f','#60a5fa','#f0b429']},
-  NC:{labels:['Consultoria','Cons. DU','IDB/Câmbio','Banking'],dez:[33200,1702,5400,245],jan:[25170,1144,9745,129],fev:[21030,1001,12170,129],colors:['#3D754E','#5a9e6f','#f0b429','#60a5fa']},
-  RI:{labels:['Consultoria','Cons. DU','Banking','Outros'],dez:[44900,1981,0,1051],jan:[45241,2056,176,0],fev:[47812,2277,0,0],colors:['#3D754E','#5a9e6f','#60a5fa','#6b7280']}
-};
-const bankers=['DN','MJ','NC','RI'];
-
-const l3mTop=new Chart(document.getElementById('l3mTop'),{type:'bar',data:{labels:bankers,datasets:[
-  {label:'Dez/25',data:bankers.map(b=>bkL3m[b].dez),backgroundColor:'rgba(61,117,78,0.2)',borderRadius:3,borderWidth:1,borderColor:'#3D754E'},
-  {label:'Jan/26',data:bankers.map(b=>bkL3m[b].jan),backgroundColor:'rgba(61,117,78,0.55)',borderRadius:3},
-  {label:'Fev/26',data:bankers.map(b=>bkL3m[b].fev),backgroundColor:bankers.map(b=>bkColors[b]),borderRadius:3}
-]},options:{responsive:true,maintainAspectRatio:false,
-  onClick(evt,els){if(!els.length)return;openL3mDrill(bankers[els[0].index]);},
-  plugins:{legend:{display:false},tooltip:{callbacks:{footer:()=>['Clique para ver breakdown por linha']}}},
-  scales:{x:{grid:{display:false},ticks:{color:'#F9F5EF',font:{size:12,weight:'500'}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});
-
-let l3mBotChart=null,l3mCurrent=null;
-function openL3mDrill(banker){
-  if(l3mCurrent===banker){
-    document.getElementById('l3mBotWrap').classList.remove('open');
-    document.getElementById('l3mDivider').classList.remove('visible');
-    l3mCurrent=null;
-    l3mTop.data.datasets[2].backgroundColor=bankers.map(b=>bkColors[b]);
-    l3mTop.update();return;
-  }
-  l3mCurrent=banker;
-  l3mTop.data.datasets[2].backgroundColor=bankers.map(b=>b===banker?bkColors[b]:'rgba(61,117,78,0.2)');
-  l3mTop.update();
-  const pill=document.getElementById('l3mPill');
-  pill.textContent=banker;pill.style.background=bkColors[banker];
-  pill.style.color=['#a3d9b1','#5a9e6f'].includes(bkColors[banker])?'#1A1A1B':'#fff';
-  document.getElementById('l3mDivider').classList.add('visible');
-  const d=bkBreak[banker];
-  document.getElementById('l3mLegend').innerHTML=d.labels.map((l,i)=>`<span class="li"><span class="ld" style="background:${d.colors[i]};"></span>${l}</span>`).join('');
-  if(l3mBotChart){l3mBotChart.destroy();l3mBotChart=null;}
-  l3mBotChart=new Chart(document.getElementById('l3mBot'),{type:'bar',data:{labels:['Dez/25','Jan/26','Fev/26'],datasets:d.labels.map((label,i)=>({label,data:[d.dez[i],d.jan[i],d.fev[i]],backgroundColor:d.colors[i],borderRadius:3}))},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});
-  const fmt2=v=>v>0?'R$'+(v>=1000?(v/1000).toFixed(1)+'K':Math.round(v)):'<span style="color:#3d3d3e">—</span>';
-  document.getElementById('l3mMiniTable').innerHTML=`<table>
-    <thead><tr><th>Linha</th><th>Dez</th><th>Jan</th><th>Fev</th></tr></thead>
-    <tbody>${d.labels.map((l,i)=>`<tr><td style="color:var(--muted);display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:2px;background:${d.colors[i]};flex-shrink:0;display:inline-block;"></span>${l}</td><td>${fmt2(d.dez[i])}</td><td>${fmt2(d.jan[i])}</td><td>${fmt2(d.fev[i])}</td></tr>`).join('')}
-    <tr class="tr-tot"><td>Total</td><td>${fmt2(bkL3m[banker].dez)}</td><td>${fmt2(bkL3m[banker].jan)}</td><td>${fmt2(bkL3m[banker].fev)}</td></tr>
-    </tbody></table>`;
-  document.getElementById('l3mBotWrap').classList.add('open');
-}
+render();
 </script>
 </body>
 </html>
