@@ -184,10 +184,16 @@ tr:last-child td{border-bottom:none;}
 <div id="page-bankers" class="page"></div>
 
 <script>
-// ── CAPTAÇÃO REAL ────────────────────────────────────────────────────────────
+// ── CAPTAÇÃO REAL (lógica alinhada com Deep Dive) ───────────────────────────
 const onCols=["btg","xp","itau","brad","sant","safra","day"];
 const META_BANKER=100e6,META_TOTAL=400e6,META_MES=META_BANKER/12;
 const MESES_ANO=12;
+
+// Custódias cobradas por cliente (alinhado com Deep Dive)
+const cobMap={879844:["btg"],840544:["btg","safra"],125053:["btg","safra"],418339:[],970016:[],485306:["btg"],358917:["btg"],590300:["btg","sant"],934976:["btg","sant"],212671:[]};
+const forceOldIDs=new Set([849526]);
+const forceNewFevIDs=new Set([485306,358917]);
+function ssCob(obj,id){if(!obj)return 0;const cols=cobMap[id];if(cols===undefined)return onCols.reduce((a,c)=>a+(obj[c]||0),0);if(cols.length===0)return 0;return cols.reduce((a,c)=>a+(obj[c]||0),0);}
 
 const aumDez=[{id:618979,btg:6406899.29,xp:0,itau:169796.20,brad:0,sant:456772.82,safra:0,day:0},{id:661713,btg:4566362.09,xp:0,itau:1060882.90,brad:0,sant:0,safra:0,day:0},{id:903036,btg:445358.13,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:497407,btg:1955947.68,xp:100936.44,itau:0,brad:0,sant:0,safra:0,day:0},{id:565544,btg:4644038.87,xp:0,itau:1042631.29,brad:0,sant:0,safra:0,day:0},{id:925907,btg:6590435.49,xp:0,itau:9409766.35,brad:0,sant:0,safra:0,day:161610.71},{id:137567,btg:563178.84,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:930928,btg:62830.14,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:274841,btg:286400.69,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:842140,btg:0,xp:1032553.03,itau:0,brad:0,sant:0,safra:534841.48,day:0},{id:552198,btg:0,xp:844787.66,itau:0,brad:0,sant:0,safra:1636337.57,day:0},{id:430702,btg:4113329.92,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:950923,btg:0,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:645684,btg:0,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:137041,btg:32601.23,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:716225,btg:1128294.36,xp:0,itau:0,brad:0,sant:394559.46,safra:0,day:0},{id:798562,btg:1650211.37,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:316800,btg:617349.78,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:161612,btg:1055500.38,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:661152,btg:3156070.49,xp:0,itau:103177.87,brad:0,sant:0,safra:0,day:0},{id:474901,btg:2014807.17,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:936944,btg:28127.49,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:563127,btg:1406259.83,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:809095,btg:494527.61,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:339099,btg:5076538.70,xp:0,itau:5124802.04,brad:0,sant:0,safra:0,day:0},{id:840544,btg:3642891.45,xp:0,itau:848195.25,brad:0,sant:0,safra:42896.82,day:0},{id:547058,btg:2555902.16,xp:0,itau:212466.50,brad:0,sant:0,safra:0,day:0},{id:879844,btg:3465969.37,xp:0,itau:231132.94,brad:0,sant:0,safra:0,day:0},{id:862450,btg:413907.26,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:908178,btg:1577304.70,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:125053,btg:7470781.63,xp:0,itau:0,brad:0,sant:0,safra:1774495.55,day:0},{id:852115,btg:0,xp:3218780.62,itau:1512179.61,brad:0,sant:0,safra:0,day:0},{id:386037,btg:2414317.24,xp:452652.39,itau:0,brad:0,sant:0,safra:0,day:0},{id:849446,btg:2297956.44,xp:13892.77,itau:0,brad:0,sant:0,safra:0,day:0},{id:740514,btg:92602.21,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:682923,btg:100535.03,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:153044,btg:4244007.33,xp:4408608.78,itau:476065.06,brad:0,sant:0,safra:0,day:0},{id:194474,btg:7908.84,xp:248336.43,itau:0,brad:0,sant:0,safra:0,day:0},{id:960617,btg:161963.13,xp:870494.94,itau:0,brad:0,sant:0,safra:0,day:0},{id:327161,btg:441457.64,xp:5820.49,itau:0,brad:0,sant:0,safra:0,day:0},{id:639107,btg:1725319.70,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:334108,btg:227062.33,xp:243941.56,itau:0,brad:0,sant:0,safra:0,day:0},{id:483852,btg:0,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:611019,btg:1798754.07,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:727727,btg:1793953.04,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:892696,btg:1800835.52,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:568556,btg:1075504.95,xp:5939375.47,itau:0,brad:0,sant:0,safra:0,day:0},{id:510568,btg:1204421.32,xp:166168.75,itau:0,brad:0,sant:0,safra:0,day:0},{id:444179,btg:5928196.25,xp:794411.68,itau:2235314.91,brad:0,sant:0,safra:0,day:969352.28},{id:788456,btg:1633948.64,xp:4860529.81,itau:0,brad:0,sant:0,safra:0,day:0},{id:259802,btg:1208060.90,xp:93167.93,itau:0,brad:0,sant:0,safra:0,day:0},{id:418339,btg:0,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:970016,btg:0,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:878457,btg:4811451.88,xp:705343.77,itau:2991363.25,brad:0,sant:0,safra:0,day:0},{id:485306,btg:0,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:358917,btg:0,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:736529,btg:1346406.08,xp:0,itau:0,brad:0,sant:0,safra:560588.97,day:0},{id:971008,btg:731703.11,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:147052,btg:1239423.24,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:987454,btg:2531090.97,xp:217079.16,itau:0,brad:0,sant:0,safra:0,day:0},{id:883700,btg:335082.80,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:798174,btg:1625671.13,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:825494,btg:5966633.37,xp:3356854.81,itau:0,brad:0,sant:0,safra:0,day:0},{id:952912,btg:1109245.52,xp:487409.31,itau:0,brad:0,sant:0,safra:0,day:0},{id:518229,btg:21029.29,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:968675,btg:1226182.32,xp:453871.82,itau:135062.80,brad:0,sant:0,safra:0,day:0},{id:124690,btg:175204.25,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:935585,btg:4452213.95,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:960759,btg:1426342.48,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:430928,btg:6521711.71,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:679330,btg:8288396.01,xp:2491216.58,itau:528183.78,brad:0,sant:0,safra:0,day:0},{id:856209,btg:43515164.97,xp:1206756.27,itau:0,brad:0,sant:0,safra:0,day:0},{id:636814,btg:2052404.87,xp:897909.69,itau:0,brad:0,sant:0,safra:0,day:0},{id:950071,btg:1107673.18,xp:14088.17,itau:0,brad:0,sant:0,safra:0,day:0},{id:973513,btg:0,xp:0,itau:5759093.72,brad:0,sant:0,safra:0,day:0},{id:449277,btg:0,xp:0,itau:4905273.03,brad:0,sant:0,safra:0,day:0},{id:122247,btg:0,xp:0,itau:1548682.43,brad:0,sant:0,safra:0,day:0},{id:359192,btg:5972733.34,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:935464,btg:988.63,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:891450,btg:379402.04,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:351507,btg:556868.13,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:856688,btg:795337.22,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:599968,btg:337253.75,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:306116,btg:257801.12,xp:2811.70,itau:0,brad:0,sant:0,safra:0,day:0},{id:414256,btg:2233861.50,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:594031,btg:506316.04,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:171696,btg:45739.19,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:371518,btg:273733.17,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:842285,btg:5444648.32,xp:156680.04,itau:2710294.81,brad:2272777.42,sant:0,safra:0,day:0},{id:503889,btg:505063.28,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:239112,btg:1787567.44,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:310252,btg:106163.16,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:590300,btg:5079213.03,xp:71365.50,itau:0,brad:0,sant:2963102.03,safra:0,day:0},{id:934976,btg:4120144.88,xp:678244.32,itau:0,brad:0,sant:716223.28,safra:0,day:0},{id:449543,btg:6900129.38,xp:0,itau:2975279.76,brad:0,sant:7397407.25,safra:0,day:0},{id:252165,btg:2808160.60,xp:210835.77,itau:0,brad:0,sant:0,safra:0,day:0},{id:754219,btg:45389.31,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:436700,btg:7573738.01,xp:1060843.38,itau:199658.19,brad:0,sant:0,safra:0,day:0},{id:364492,btg:1081679.10,xp:0,itau:381562.32,brad:0,sant:0,safra:0,day:0},{id:428381,btg:733679.19,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:458073,btg:5548388.97,xp:0,itau:147557.22,brad:0,sant:0,safra:0,day:0},{id:691401,btg:1586106.97,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:971822,btg:1258528.11,xp:10702.53,itau:1229031.29,brad:0,sant:0,safra:0,day:0},{id:908453,btg:538833.42,xp:32977.61,itau:0,brad:0,sant:0,safra:0,day:0},{id:982843,btg:41016.82,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:670131,btg:6219175.48,xp:223436.45,itau:0,brad:261824.11,sant:0,safra:0,day:0},{id:801379,btg:1410673.48,xp:0,itau:2612693.42,brad:0,sant:0,safra:0,day:0},{id:138548,btg:364339.00,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:243317,btg:445764.29,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:596924,btg:891747.85,xp:694879.47,itau:0,brad:0,sant:0,safra:0,day:0},{id:919936,btg:223222.90,xp:0,itau:0,brad:0,sant:0,safra:0,day:0},{id:592813,btg:4632016.70,xp:2542834.25,itau:2204549.26,brad:0,sant:0,safra:0,day:163537.00},{id:212671,btg:0,xp:0,itau:0,brad:0,sant:0,safra:0,day:0}];
 
@@ -206,7 +212,6 @@ const metaMap={
   891450:{b:"RI",c:"AJ"},351507:{b:"RI",c:"AS"},856688:{b:"RI",c:"AV"},599968:{b:"RI",c:"BB"},306116:{b:"RI",c:"BR"},414256:{b:"RI",c:"CG"},594031:{b:"RI",c:"DS"},171696:{b:"RI",c:"EK"},371518:{b:"RI",c:"FA"},842285:{b:"RI",c:"FB"},503889:{b:"RI",c:"FR"},239112:{b:"RI",c:"F-C"},310252:{b:"RI",c:"F-C"},590300:{b:"RI",c:"F-D"},934976:{b:"RI",c:"F-D"},449543:{b:"RI",c:"F-J"},252165:{b:"RI",c:"GB"},595352:{b:"RI",c:"JG"},754219:{b:"RI",c:"JJ"},436700:{b:"RI",c:"JO"},364492:{b:"RI",c:"LB"},428381:{b:"RI",c:"LK"},458073:{b:"RI",c:"MF"},691401:{b:"RI",c:"MF2"},971822:{b:"RI",c:"MI"},908453:{b:"RI",c:"MI2"},982843:{b:"RI",c:"NS"},670131:{b:"RI",c:"PM"},801379:{b:"RI",c:"PN"},138548:{b:"RI",c:"PR"},243317:{b:"RI",c:"RA"},614115:{b:"RI",c:"RA"},596924:{b:"RI",c:"RM"},919936:{b:"RI",c:"SA"},592813:{b:"RI",c:"VD"},212671:{b:"RI",c:"BD"},
 };
 
-function ss(obj){return obj?onCols.reduce((a,c)=>a+(obj[c]||0),0):0;}
 function buildIdx(arr){const m={};arr.forEach(r=>{if(!m[r.id])m[r.id]={btg:0,xp:0,itau:0,brad:0,sant:0,safra:0,day:0};onCols.forEach(c=>m[r.id][c]+=(r[c]||0));});return m;}
 
 const idxDez=buildIdx(aumDez),idxJan=buildIdx(aumJan),idxFev=buildIdx(aumFev);
@@ -216,18 +221,26 @@ const allIDs=[...new Set([...aumDez,...aumJan,...aumFev].map(r=>r.id))].filter(i
 
 const capRows=allIDs.map(id=>{
   const m=metaMap[id];
-  const dez=ss(idxDez[id]),jan=ss(idxJan[id]),fev=ss(idxFev[id]);
-  const rj=ss(idxRJ[id]),rf=ss(idxRF[id]);
-  const newJan=!idsDez.has(id)&&idsJan.has(id);
-  const newFev=!idsJan.has(id)&&fev>0;
-  const cj=newJan?jan:(jan-dez-rj);
-  const cf=newFev?fev:(fev-jan-rf);
+  const dezCob=ssCob(idxDez[id],id),janCob=ssCob(idxJan[id],id),fevCob=ssCob(idxFev[id],id);
+  const rjCob=ssCob(idxRJ[id],id),rfCob=ssCob(idxRF[id],id);
+  const isForceOld=forceOldIDs.has(id),isForceNewFev=forceNewFevIDs.has(id);
+  const newJan=!isForceOld&&!idsDez.has(id)&&idsJan.has(id);
+  const newFev=!isForceOld&&!newJan&&(isForceNewFev||(!idsJan.has(id)&&fevCob>0));
+  let cj,cf;
+  if(newJan){cj=janCob;cf=fevCob-janCob;}
+  else if(newFev){cj=janCob-dezCob-rjCob;cf=fevCob;}
+  else{cj=janCob-dezCob-rjCob;cf=fevCob-janCob-rfCob;}
   return{id,b:m.b,c:m.c,cj,cf,newJan,newFev};
 });
 
+// Agregar por cliente
+const _cliMap={};
+capRows.forEach(r=>{const k=r.b+'|'+r.c;if(!_cliMap[k])_cliMap[k]={b:r.b,c:r.c,cj:0,cf:0,newJan:false,newFev:false};_cliMap[k].cj+=r.cj;_cliMap[k].cf+=r.cf;if(r.newJan)_cliMap[k].newJan=true;if(r.newFev)_cliMap[k].newFev=true;});
+const _clients=Object.values(_cliMap);
+
 function capByBanker(mIdx){
   const r={DN:{jan:0,fev:0,newJan:0,newFev:0,oldJan:0,oldFev:0},MJ:{jan:0,fev:0,newJan:0,newFev:0,oldJan:0,oldFev:0},NC:{jan:0,fev:0,newJan:0,newFev:0,oldJan:0,oldFev:0},RI:{jan:0,fev:0,newJan:0,newFev:0,oldJan:0,oldFev:0}};
-  capRows.forEach(row=>{
+  _clients.forEach(row=>{
     const b=row.b;
     r[b].jan+=row.cj;
     if(row.newJan)r[b].newJan+=row.cj;else r[b].oldJan+=row.cj;
@@ -262,53 +275,59 @@ function render(){
 }
 
 function renderCaptacao(){
-  const nMeses=curM+1;
-  const bk=capByBanker(curM);
   const BANKERS=['DN','MJ','NC','RI'];
   const BK_NAMES={DN:'DN — Daniel Noh',MJ:'MJ — Mateus Janisella',NC:'NC — Nathan Cohen',RI:'RI — Ricardo Infantozzi'};
+  const BK_COLORS={DN:'#2563eb',MJ:'#7c3aed',NC:'#16a34a',RI:'#ea580c'};
+
+  const nMeses=Math.min(curM+1,2);
+  const bk=capByBanker(Math.min(curM,1));
   const paceEspPct=(nMeses/MESES_ANO)*100;
 
   let totJan=0,totFev=0,totNew=0,totOld=0;
-  BANKERS.forEach(b=>{totJan+=bk[b].jan;totFev+=bk[b].fev;totNew+=(curM>0?bk[b].newFev:bk[b].newJan);totOld+=(curM>0?bk[b].oldFev:bk[b].oldJan);});
-  const totYTD=totJan+(curM>0?totFev:0);
+  BANKERS.forEach(b=>{
+    totJan+=bk[b].jan;
+    if(nMeses>1){totFev+=bk[b].fev;totNew+=(bk[b].newJan+bk[b].newFev);totOld+=(bk[b].oldJan+bk[b].oldFev);}
+    else{totNew+=bk[b].newJan;totOld+=bk[b].oldJan;}
+  });
+  const totYTD=totJan+totFev;
   const paceAnual=(totYTD/nMeses)*MESES_ANO;
   const falta=Math.max(0,META_TOTAL-totYTD);
   const ytdPct=(totYTD/META_TOTAL)*100;
 
-  // métricas
-  const bestBk=BANKERS.reduce((a,b)=>{const va=(curM>0?bk[b].fev:bk[b].jan);const vb=(curM>0?bk[b].fev:bk[b].jan);return va>vb?a:b;},BANKERS[0]);
-  const bestVal=curM>0?bk[bestBk].fev:bk[bestBk].jan;
-  const metricsMes=D[curM].label;
+  // Banner offshore
+  const offshoreNote=`<div style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.4);border-radius:8px;padding:.85rem 1.2rem;margin-bottom:1rem;display:flex;align-items:center;gap:12px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div><span style="font-size:12px;font-weight:700;color:#60a5fa;">Posição Offshore não incluída</span><span style="font-size:11px;color:#93c5fd;margin-left:8px;">Os números abaixo refletem apenas custódias onshore. Offshore ainda não consolidado.</span></div></div>`;
+
+  // Banner Mar sem consolidação
+  const marWarning=curM===2?`<div style="background:rgba(180,83,9,0.15);border:1px solid rgba(180,83,9,0.5);border-radius:8px;padding:.75rem 1.2rem;margin-bottom:1rem;display:flex;align-items:center;gap:10px;"><span style="font-size:18px;flex-shrink:0;">📅</span><div><span style="font-size:12px;font-weight:700;color:#fbbf24;">Captação consolidada até Fev/26</span><span style="font-size:11px;color:#d97706;margin-left:8px;">A consolidação de março ainda não foi realizada. YTD reflete Jan + Fev.</span></div></div>`:'';
 
   const metricsHTML=[
-    {cls:'mc-up', label:'Captação YTD', value:fmtM(totYTD), note:`Meta: ${fmtM(META_TOTAL,0)}`},
-    {cls:'',      label:'% Meta Anual', value:ytdPct.toFixed(1)+'%', note:`${nMeses} ${nMeses===1?'mês':'meses'} de 12`},
-    {cls:'mc-up', label:`Melhor ${metricsMes}`, value:bestBk, note:fmtM(bestVal)},
-    {cls:'mc-warn',label:'Captação Novos', value:fmtM(totNew), note:`${((totNew/Math.abs(totYTD||1))*100).toFixed(0)}% do YTD`},
-    {cls:'mc-up',  label:'Captação Antigos', value:fmtM(totOld), note:`${((totOld/Math.abs(totYTD||1))*100).toFixed(0)}% do YTD`},
-    {cls:'',      label:'Meta/Banker/Mês', value:fmtM(META_MES), note:'R$100MM ÷ 12'},
-    {cls:'mc-warn',label:'Falta captar', value:fmtM(falta,1), note:`Restam ${MESES_ANO-nMeses} meses`},
+    {cls:'mc-up',   label:'Captação YTD',     value:fmtM(totYTD),   note:`Meta: ${fmtM(META_TOTAL,0)}`},
+    {cls:'',        label:'% Meta Anual',      value:ytdPct.toFixed(1)+'%', note:`${nMeses} mês(es) de 12`},
+    {cls:'mc-up',   label:'Captação Jan/26',   value:fmtM(totJan),   note:'1º mês'},
+    {cls:nMeses>1?(totFev>=0?'mc-up':'mc-down'):'', label:'Captação Fev/26', value:nMeses>1?fmtM(totFev):'—', note:nMeses>1?'2º mês':'Aguard. consolidação'},
+    {cls:'mc-warn', label:'Novos YTD',         value:fmtM(totNew),   note:`${((totNew/Math.abs(totYTD||1))*100).toFixed(0)}% do YTD`},
+    {cls:'mc-up',   label:'Antigos YTD',       value:fmtM(totOld),   note:`${((totOld/Math.abs(totYTD||1))*100).toFixed(0)}% do YTD`},
+    {cls:'mc-warn', label:'Falta captar',      value:fmtM(falta),    note:`Restam ${MESES_ANO-nMeses} meses`},
     {cls:paceAnual>=META_TOTAL?'mc-up':'mc-warn', label:'Pace anual', value:fmtM(paceAnual,0), note:paceAnual>=META_TOTAL?'✓ Acima da meta':'⚠ Abaixo da meta'},
   ].map(m=>`<div class="mc ${m.cls}"><div class="mc-label">${m.label}</div><div class="mc-value">${m.value}</div><div class="mc-note">${m.note}</div></div>`).join('');
 
-  // bankers rows
   const bankersHTML=BANKERS.map(b=>{
-    const ytd=bk[b].jan+(curM>0?bk[b].fev:0);
+    const ytd=bk[b].jan+(nMeses>1?bk[b].fev:0);
     const pace=(ytd/nMeses)*MESES_ANO;
     const pacePct=(pace/META_BANKER)*100;
-    const ytdPctB=(ytd/META_BANKER)*100;
     const janW=Math.max(0,bk[b].jan/META_BANKER*100).toFixed(2)+'%';
-    const fevW=curM>0?Math.max(0,bk[b].fev/META_BANKER*100).toFixed(2)+'%':'0%';
-    const janNeg=bk[b].jan<0,fevNeg=curM>0&&bk[b].fev<0;
+    const fevW=nMeses>1?Math.max(0,bk[b].fev/META_BANKER*100).toFixed(2)+'%':'0%';
+    const janNeg=bk[b].jan<0,fevNeg=nMeses>1&&bk[b].fev<0;
     const bc=badgeCls(pacePct);
-    const newV=curM>0?bk[b].newFev:bk[b].newJan;
-    const oldV=curM>0?bk[b].oldFev:bk[b].oldJan;
+    const newV=nMeses>1?(bk[b].newJan+bk[b].newFev):bk[b].newJan;
+    const oldV=nMeses>1?(bk[b].oldJan+bk[b].oldFev):bk[b].oldJan;
+    const dot=`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${BK_COLORS[b]};margin-right:6px;flex-shrink:0;"></span>`;
     return`<div class="banker-row">
       <div class="banker-top">
-        <span class="banker-name">${BK_NAMES[b]}</span>
+        <span class="banker-name">${dot}${BK_NAMES[b]}</span>
         <div class="banker-vals">
           <span class="bv">Jan: <strong>${fmtM(bk[b].jan)}</strong></span>
-          ${curM>0?`<span class="bv">Fev: <strong>${fmtM(bk[b].fev)}</strong></span>`:''}
+          ${nMeses>1?`<span class="bv">Fev: <strong>${fmtM(bk[b].fev)}</strong></span>`:''}
           <span class="bv">YTD: <strong>${fmtM(ytd)}</strong></span>
           <span class="bv">Novos: <strong style="color:var(--warn);">${fmtM(newV)}</strong></span>
           <span class="bv">Antigos: <strong style="color:var(--gl);">${fmtM(oldV)}</strong></span>
@@ -318,7 +337,7 @@ function renderCaptacao(){
       <div class="bar-outer">
         <div class="bar-track">
           <div class="${janNeg?'seg-neg':'seg-jan'}" style="width:${janW}"></div>
-          ${curM>0?`<div class="${fevNeg?'seg-neg':'seg-fev'}" style="width:${fevW}"></div>`:''}
+          ${nMeses>1?`<div class="${fevNeg?'seg-neg':'seg-fev'}" style="width:${fevW}"></div>`:''}
         </div>
         <div class="marker m-pace" style="left:${Math.min(99,paceEspPct).toFixed(1)}%;height:calc(100% + 6px);top:-3px;">
           <span class="m-label" style="color:var(--warn);">${fmtM(META_BANKER/MESES_ANO*nMeses)}</span>
@@ -330,30 +349,29 @@ function renderCaptacao(){
       <div class="bar-sub">
         <span class="bar-pct">
           <strong style="color:var(--gl);">Jan ${fmtM(bk[b].jan)}</strong>
-          ${curM>0?` + <strong style="color:#3D754E;">Fev ${fmtM(bk[b].fev)}</strong>`:''}
+          ${nMeses>1?` + <strong style="color:#3D754E;">Fev ${fmtM(bk[b].fev)}</strong>`:''}
           = <strong>${fmtM(ytd)}</strong>
         </span>
-        <span class="bar-pct">Gap: <strong style="color:var(--ow);">${fmtM(Math.max(0,META_BANKER-ytd))}</strong></span>
+        <span class="bar-pct">Gap: <strong>${fmtM(Math.max(0,META_BANKER-ytd))}</strong></span>
       </div>
     </div>`;
   }).join('');
 
-  // total block
   const totalHTML=`<div class="pace-divider"></div>
   <div class="total-block">
     <div class="total-top">
       <span style="font-size:12px;font-weight:500;color:var(--gl);">Total RTS — 4 Bankers</span>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <span style="font-size:11px;color:var(--muted);">Jan: <strong style="color:var(--gl);">${fmtM(totJan)}</strong></span>
-        ${curM>0?`<span style="font-size:11px;color:var(--muted);">Fev: <strong style="color:#3D754E;">${fmtM(totFev)}</strong></span>`:''}
+        ${nMeses>1?`<span style="font-size:11px;color:var(--muted);">Fev: <strong style="color:#3D754E;">${fmtM(totFev)}</strong></span>`:''}
         <span style="font-size:11px;color:var(--muted);">YTD: <strong style="color:var(--gl);">${fmtM(totYTD)}</strong></span>
         <span style="font-size:11px;color:var(--muted);">Falta: <strong style="color:var(--warn);">${fmtM(falta)}</strong></span>
         <span class="pace-badge ${badgeCls((paceAnual/META_TOTAL)*100)}">${((paceAnual/META_TOTAL)*100).toFixed(0)}% do pace</span>
       </div>
     </div>
-    <div style="background:rgba(255,255,255,0.05);border-radius:6px;height:12px;position:relative;overflow:hidden;display:flex;">
+    <div style="background:rgba(255,255,255,0.05);border-radius:6px;height:12px;overflow:hidden;display:flex;">
       <div style="height:100%;background:var(--gl);width:${Math.max(0,totJan/META_TOTAL*100).toFixed(2)}%;"></div>
-      ${curM>0?`<div style="height:100%;background:#3D754E;width:${Math.max(0,totFev/META_TOTAL*100).toFixed(2)}%;"></div>`:''}
+      ${nMeses>1?`<div style="height:100%;background:#3D754E;width:${Math.max(0,totFev/META_TOTAL*100).toFixed(2)}%;"></div>`:''}
     </div>
     <div style="display:flex;justify-content:space-between;margin-top:5px;">
       <span style="font-size:10px;color:var(--gl);">${ytdPct.toFixed(1)}% da meta R$400MM concluído</span>
@@ -361,35 +379,30 @@ function renderCaptacao(){
     </div>
   </div>`;
 
-  // progresso por banker
   const progHTML=BANKERS.map(b=>{
-    const ytd=bk[b].jan+(curM>0?bk[b].fev:0);
+    const ytd=bk[b].jan+(nMeses>1?bk[b].fev:0);
     const pct=Math.max(0,ytd/META_BANKER*100);
-    const fillCls=pct>=50?'':(pct>=20?'mid':'low');
-    return`<div class="prog-wrap"><div class="prog-label"><span class="prog-name">${b}</span><span class="prog-val">${fmtM(ytd)} · ${pct.toFixed(1)}%</span></div><div class="prog-bar"><div class="prog-fill ${fillCls}" style="width:${Math.min(100,pct)}%"></div></div></div>`;
+    const fc=pct>=50?'':(pct>=20?'mid':'low');
+    const dot=`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${BK_COLORS[b]};margin-right:5px;"></span>`;
+    return`<div class="prog-wrap"><div class="prog-label"><span class="prog-name">${dot}${b}</span><span class="prog-val">${fmtM(ytd)} · ${pct.toFixed(1)}%</span></div><div class="prog-bar"><div class="prog-fill ${fc}" style="width:${Math.min(100,pct)}%"></div></div></div>`;
   }).join('');
   const totPct=Math.max(0,totYTD/META_TOTAL*100);
   const progTotHTML=`<div class="prog-wrap" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;"><div class="prog-label"><span class="prog-name" style="color:var(--gl);">Total RTS</span><span class="prog-val" style="color:var(--gl);">${fmtM(totYTD)} · ${totPct.toFixed(1)}%</span></div><div class="prog-bar"><div class="prog-fill" style="width:${Math.min(100,totPct)}%;background:var(--gl);"></div></div></div>`;
 
-  const noteText=curM===0
-    ?'Apenas 1 mês completo. DN lidera em captação absoluta. MJ e NC precisam acelerar.'
-    :`RI e MJ aceleram em fev. DN e NC abaixo do pace — atenção redobrada nos próximos meses.`;
-
   document.getElementById('page-captacao').innerHTML=`
+  ${offshoreNote}
+  ${marWarning}
   <div class="metrics">${metricsHTML}</div>
   <div class="pace-section">
     <div class="pace-header">
       <div class="card-title">Captação Líquida por Banker — Pace vs Meta Anual</div>
-      <div class="card-sub" style="margin-bottom:.5rem;">Δ Cap = AUM atual − AUM anterior − Retorno · R$100MM/banker · R$8,3MM/mês · linha amarela = pace esperado (${nMeses} ${nMeses===1?'mês':'meses'})</div>
+      <div class="card-sub" style="margin-bottom:.5rem;">Δ Cap = AUM cobrado atual − AUM cobrado anterior − Retorno cobrado · Lógica alinhada com Deep Dive · R$100MM/banker</div>
       <div class="legend" style="margin-bottom:0;">
         <span class="li"><span class="ld" style="background:var(--gl);"></span>Jan/26</span>
-        ${curM>0?'<span class="li"><span class="ld" style="background:#3D754E;"></span>Fev/26</span>':''}
-        ${curM>1?'<span class="li"><span class="ld" style="background:#5a9e6f;"></span>Mar/26</span>':''}
+        ${nMeses>1?'<span class="li"><span class="ld" style="background:#3D754E;"></span>Fev/26</span>':''}
         <span class="li"><span class="ld" style="background:rgba(248,113,113,0.6);"></span>Negativo</span>
         <span class="li"><div class="ld-line" style="background:var(--warn);"></div>Pace esperado</span>
         <span class="li"><div class="ld-line" style="background:rgba(255,255,255,0.2);"></div>Meta anual</span>
-        <span class="li"><span class="ld" style="background:var(--warn);opacity:.7;"></span>Novo</span>
-        <span class="li"><span class="ld" style="background:var(--gl);opacity:.7;"></span>Antigo</span>
       </div>
     </div>
     <div class="pace-body">${bankersHTML}${totalHTML}</div>
@@ -399,7 +412,7 @@ function renderCaptacao(){
     <div class="card-title">Progresso vs Meta Anual — R$100MM/banker</div>
     <div class="card-sub">YTD · ritmo esperado: ${paceEspPct.toFixed(1)}%</div>
     <div style="margin-top:.75rem;">${progHTML}${progTotHTML}</div>
-    <div class="note">${noteText}</div>
+    <div class="note">Números alinhados com o Deep Dive · custódias cobradas por cliente aplicadas · regra 3 meses para clientes novos</div>
   </div>
   <div style="display:flex;justify-content:flex-end;margin-top:4px;">
     <a href="https://mateus-rts.github.io/Deepdive-cap/" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:rgba(61,117,78,0.12);border:1px solid rgba(61,117,78,0.35);border-radius:6px;padding:9px 18px;color:var(--gl);font-size:12px;font-family:'Ubuntu',sans-serif;font-weight:500;text-decoration:none;transition:all .15s;" onmouseover="this.style.background='rgba(61,117,78,0.22)'" onmouseout="this.style.background='rgba(61,117,78,0.12)'">
