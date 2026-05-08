@@ -410,6 +410,8 @@ function renderPaceChart(){
   var nMes=curM+1;
   var labels=['Jan/26','Fev/26','Mar/26','Abr/26'].slice(0,nMes);
   var mensal={DN:[42778,37124,51428,44665],MJ:[52941,59072,54407,80798],NC:[35044,33200,48310,64114],RI:[45416,47812,46416,60222]};
+  var mensalC={DN:[39129,37124,31399,43807],MJ:[49099,51151,48219,58857],NC:[25170,21030,38747,25439],RI:[45241,47812,46416,58246]};
+  var orcMesC=[168750/4,177188/4,206719/4,217055/4];
   var orcMes=[213850/4,225287/4,263818/4,266154/4];
   var bks=['DN','MJ','NC','RI'];
   var card=document.getElementById('paceReceitaCard');
@@ -417,21 +419,21 @@ function renderPaceChart(){
     var ctrl=document.createElement('div');
     ctrl.className='pace-btns';
     ctrl.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;';
-    ctrl.innerHTML=[['A','Mensal'],['C','Gap 1S26']].map(function(x){
+    ctrl.innerHTML=[['A','Total'],['B','Consultoria'],['C','Gap Total'],['D','Gap Consult.']].map(function(x){
       return '<button id="pbtn'+x[0]+'" onclick="setPaceView(\''+x[0]+'\')" style="font-size:11px;padding:3px 12px;border-radius:4px;cursor:pointer;font-family:inherit;transition:all .15s;">'+x[1]+'</button>';
     }).join('');
     var titleEl=card.querySelector('.card-title');
     if(titleEl)titleEl.after(ctrl);
   }
   if(!window._paceView)window._paceView='A';
-  buildPaceChart(window._paceView,{labels:labels,mensal:mensal,orcMes:orcMes,BKC:BKC,G:G,T:T,fmt:fmt,nMes:nMes,bks:bks});
+  buildPaceChart(window._paceView,{labels:labels,mensal:mensal,mensalC:mensalC,orcMes:orcMes,orcMesC:orcMesC,BKC:BKC,G:G,T:T,fmt:fmt,nMes:nMes,bks:bks});
   updatePaceBtns(window._paceView);
 }
 
 function setPaceView(v){window._paceView=v;renderPaceChart();updatePaceBtns(v);}
 
 function updatePaceBtns(active){
-  ['A','C'].forEach(function(id){
+  ['A','B','C','D'].forEach(function(id){
     var btn=document.getElementById('pbtn'+id);
     if(!btn)return;
     if(id===active){btn.style.background='var(--gl)';btn.style.color='#fff';btn.style.border='none';}
@@ -440,7 +442,7 @@ function updatePaceBtns(active){
 }
 
 function buildPaceChart(view,p){
-  var labels=p.labels,mensal=p.mensal,orcMes=p.orcMes,BKC=p.BKC,G=p.G,T=p.T,fmt=p.fmt,nMes=p.nMes,bks=p.bks;
+  var labels=p.labels,mensal=p.mensal,mensalC=p.mensalC,orcMes=p.orcMes,orcMesC=p.orcMesC,BKC=p.BKC,G=p.G,T=p.T,fmt=p.fmt,nMes=p.nMes,bks=p.bks;
   var baseScales={x:{grid:{display:false},ticks:{color:T,font:{size:11}}},y:{grid:{color:G},ticks:{color:T,font:{size:10},callback:function(v){return fmt(v);}}}};
   if(view==='A'){
     var orcYTD=orcMes.slice(0,nMes).reduce(function(a,b){return a+b;},0);
@@ -452,9 +454,22 @@ function buildPaceChart(view,p){
     });
     ds.push({label:'Orçado/banker',data:orcMes.slice(0,nMes).concat([null,orcYTD]),backgroundColor:'rgba(240,180,41,0.25)',borderColor:'#f0b429',borderWidth:1.5,borderRadius:3,borderSkipped:false,order:1});
     mkChart('paceReceitaChart',{type:'bar',data:{labels:labA,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{filter:function(i){return i.raw!=null;},callbacks:{label:function(c){return c.dataset.label+': '+fmt(c.raw);}}}},scales:baseScales}});
+  } else if(view==='B'){
+    var orcYTDB=orcMesC.slice(0,nMes).reduce(function(a,b){return a+b;},0);
+    var labB=labels.concat(['','YTD']);
+    var dsB=bks.map(function(bk){
+      var ytd=mensalC[bk].slice(0,nMes).reduce(function(a,b){return a+b;},0);
+      var bgArr=mensalC[bk].slice(0,nMes).map(function(){return BKC[bk]+'bb';}).concat([null,BKC[bk]]);
+      return{label:bk,data:mensalC[bk].slice(0,nMes).concat([null,ytd]),backgroundColor:bgArr,borderRadius:3,borderSkipped:false};
+    });
+    dsB.push({label:'Orçado/banker',data:orcMesC.slice(0,nMes).concat([null,orcYTDB]),backgroundColor:'rgba(240,180,41,0.25)',borderColor:'#f0b429',borderWidth:1.5,borderRadius:3,borderSkipped:false,order:1});
+    mkChart('paceReceitaChart',{type:'bar',data:{labels:labB,datasets:dsB},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{filter:function(i){return i.raw!=null;},callbacks:{label:function(c){return c.dataset.label+': '+fmt(c.raw);}}}},scales:baseScales}});
   } else {
-    var gaps=bks.map(function(bk){return mensal[bk].slice(0,nMes).reduce(function(a,b){return a+b;},0)-orcMes.slice(0,nMes).reduce(function(a,b){return a+b;},0);});
-    mkChart('paceReceitaChart',{type:'bar',data:{labels:bks,datasets:[{label:'Gap vs orçado',data:gaps,backgroundColor:gaps.map(function(v){return v>=0?'#5a9e6f':'#f87171';}),borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return(c.raw>=0?'+':'')+fmt(c.raw);}}}},scales:{x:{grid:{color:G},ticks:{color:T,font:{size:10},callback:function(v){return(v>=0?'+':'')+fmt(v);}}},y:{grid:{display:false},ticks:{color:T,font:{size:12}}}}}});
+    var gapData=view==='D'
+      ?bks.map(function(bk){return mensalC[bk].slice(0,nMes).reduce(function(a,b){return a+b;},0)-orcMesC.slice(0,nMes).reduce(function(a,b){return a+b;},0);})
+      :bks.map(function(bk){return mensal[bk].slice(0,nMes).reduce(function(a,b){return a+b;},0)-orcMes.slice(0,nMes).reduce(function(a,b){return a+b;},0);});
+    var gapLabel=view==='D'?'Gap vs orçado consultoria':'Gap vs orçado total';
+    mkChart('paceReceitaChart',{type:'bar',data:{labels:bks,datasets:[{label:gapLabel,data:gapData,backgroundColor:gapData.map(function(v){return v>=0?'#5a9e6f':'#f87171';}),borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return(c.raw>=0?'+':'')+fmt(c.raw);}}}},scales:{x:{grid:{color:G},ticks:{color:T,font:{size:10},callback:function(v){return(v>=0?'+':'')+fmt(v);}}},y:{grid:{display:false},ticks:{color:T,font:{size:12}}}}}});
   }
 }
 
