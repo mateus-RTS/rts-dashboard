@@ -369,6 +369,135 @@ function fmtM(v,dec=1){if(isNaN(v))return'-';const n=Math.abs(v)/1e6;const s='R$
 function fmtR(v){if(!v||isNaN(v))return'-';const s='R$'+Math.abs(Math.round(v)).toLocaleString('pt-BR');return v<0?`(${s})`:s;}
 function badgeCls(pct){return pct>=100?'p-ok':pct>=60?'p-warn':'p-low';}
 
+// ── SUPABASE CONFIG ───────────────────────────────────────────────────────────
+const SB_URL = 'https://zjhaprbilpoypwpwwxih.supabase.co';
+const SB_KEY = 'sb_publishable__b6wXAjX79DSy2EFk_T9sA_Z0qjgqAh';
+
+async function carregarDoSupabase(mesStr) {
+  // mesStr = '2026-05-01'
+  const headers = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
+
+  const [recResp, cusResp] = await Promise.all([
+    fetch(`${SB_URL}/rest/v1/receita?mes=eq.${mesStr}&empresa=eq.RTS&select=categoria,realizado`, {headers}),
+    fetch(`${SB_URL}/rest/v1/custos?mes=eq.${mesStr}&select=categoria,realizado`, {headers}),
+  ]);
+
+  const recRows = await recResp.json();
+  const cusRows = await cusResp.json();
+
+  // Agregar receita por categoria
+  const rec = {};
+  for(const r of recRows) rec[r.categoria] = (rec[r.categoria]||0) + parseFloat(r.realizado||0);
+  const consultoria = Math.round(rec.consultoria||0);
+  const crossell    = Math.round(rec.crossell||0);
+  const recTotal    = consultoria + crossell;
+
+  // Agregar custos por categoria
+  const cus = {};
+  for(const r of cusRows) cus[r.categoria] = (cus[r.categoria]||0) + parseFloat(r.realizado||0);
+  const cusTotal = Object.values(cus).reduce((a,b)=>a+b,0);
+
+  const fmtK = v => v>=1000?`R$ ${(v/1000).toFixed(1)}K`:`R$ ${Math.round(v)}`;
+  const fmtKn = v => `-R$ ${Math.round(v).toLocaleString('pt-BR')}`;
+
+  // Montar acordeon de custos
+  const catNames = {comercial:'Despesa Comercial',adm:'Despesas Administrativas',sistemas:'Sistemas',consol:'Consolidação',estrategia:'Estratégia',pessoas:'Pessoas'};
+  const acordeon = Object.entries(cus)
+    .filter(([k])=>catNames[k])
+    .sort((a,b)=>catNames[a[0]]?.localeCompare(catNames[b[0]]))
+    .map(([id,val])=>({
+      id, name:catNames[id]||id,
+      real: fmtKn(val), orc: '—', var:'—', vCls:'v-neu',
+      sub:[{name:'(detalhamento pendente)',real:fmtKn(val),orc:'—'}]
+    }));
+
+  return {
+    label: 'Mai/26',
+    _fromSupabase: true,
+    visao:{
+      metrics:[
+        {cls:'',label:'AUM Custódia',value:'—',note:'Aguardando consolidação'},
+        {cls:'',label:'Receita Líquida',value:fmtK(recTotal),note:'Fonte: Nibo/Supabase'},
+        {cls:'',label:'Lucro Líquido',value:'—',note:'Aguardando custos finais'},
+        {cls:'',label:'Margem Líquida',value:'—',note:'—'},
+        {cls:'',label:'ROA Consultoria',value:'—',note:'Aguardando AUM'},
+        {cls:'',label:'Caixa RTS',value:'—',note:'Aguardando consolidação'},
+      ],
+      aumOrc:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],real:[567.4,582.0,583.6,612.9,null],orc:[575,597.5,621.1,675.1,null],noteText:'Mai/26: aguardando AUM'},
+      roa:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],real:[0.437,0.41,0.51,0.45,null],orc:[0.45,0.45,0.50,0.50,0.50]},
+      recLuc:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],rec:[149.8,156.0,211.1,210.5,Math.round(recTotal/1000*10)/10],luc:[72.6,73.9,126.4,113.9,null]},
+      marg:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],real:[48.5,47.4,60.0,54.0,null],orc:[null,null,null,null,54],alertNote:'Mai/26: margem pendente.'},
+      t1:null, bankerReceita:[]
+    },
+    receita:{
+      metrics:[
+        {cls:'',label:'Receita Total Mai',value:fmtK(recTotal),note:'Fonte: Supabase (parcial)'},
+        {cls:'',label:'Consultoria RTS',value:fmtK(consultoria),note:`${recRows.length} lançamentos`},
+        {cls:'',label:'Cross-sell AUGE',value:fmtK(crossell),note:'Fonte: Supabase'},
+        {cls:'',label:'Receita / DU',value:'—',note:'Aguardando DU mai'},
+        {cls:'',label:'Maior Receita Mai',value:'—',note:'Aguardando banker breakdown'},
+      ],
+      recRts:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],consult:[158639,157117,164781,186349,consultoria],consultOrc:[168750,177188,206719,217055,217055],fin:[2880,1723,1694,1800,0],recTotOrc:[213850,229362,257977,270396,270396],recTotReal:[179000,178931,252255,251600,recTotal]},
+      du:{prev:{label:'Abr/26',val:'R$ 8.470',sub:'consultoria / DU'},cur:{label:'Mai/26',val:'—',sub:'aguardando'},info:'Mai/26: dados parciais do Supabase.'},
+      charts:{consult:[158639,157117,164781,186349,consultoria],bkTotals:{dez:null,jan:52941,fev:59072,mar:54407,abr:80798,mai:null},DN:{dez:null,jan:42778,fev:37124,mar:51428,abr:45798,mai:null},NC:{dez:null,jan:35044,fev:33200,mar:48310,abr:26595,mai:null},RI:{dez:null,jan:45416,fev:47812,mar:46416,abr:60894,mai:null}},
+      bankerAll:[{bk:'Total',consult:fmtK(consultoria),du:'—',cross:fmtK(crossell),total:fmtK(recTotal),var:'—',vc:'neu',roa:'—',roaBk:'—',tot:true}],
+      auge:{linhas:[{nome:'Cross-sell',cor:'#f0b429',jan:{},fev:{},mar:{},abr:{},mai:{total:crossell}}],prevLabel:'Abr/26',curLabel:'Mai/26'},
+      tabBankers:{mj:{rows:[['Total','—','—','—','—','—']]},dn:{rows:[['Total','—','—','—','—','—']]},ri:{rows:[['Total','—','—','—','—','—']]},nc:{rows:[['Total','—','—','—','—','—']]}},
+      tabHeaders:['Linha','Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],
+      roaBanker:[{bk:'Total',v:'—'}]
+    },
+    custos:{
+      metrics:[
+        {cls:'',label:'Custo Total Mai',value:fmtK(cusTotal),note:'Fonte: Supabase'},
+        {cls:'',label:'vs Orçado',value:'—',note:'Orçado pendente'},
+        {cls:'',label:'Pessoas',value:fmtK(cus.pessoas||0),note:''},
+        {cls:'',label:'Desp. Administrativas',value:fmtK(cus.adm||0),note:''},
+      ],
+      chart:{labels:Object.keys(cus).map(k=>catNames[k]||k),real:Object.values(cus).map(Math.round),orc:Object.values(cus).map(()=>0)},
+      varChart:{labels:Object.keys(cus).map(k=>catNames[k]||k),vals:Object.values(cus).map(()=>0)},
+      totalReal: fmtKn(cusTotal), totalOrc:'—', totalVar:'—', totalVCls:'v-neu',
+      warnNote:'Mai/26: dados do Supabase. Orçado pendente.',
+      acordeon,
+    },
+    bankers:{
+      metrics:[
+        {cls:'',label:'AUM Total RTS',value:'—',note:'Aguardando consolidação'},
+        {cls:'',label:'Total Clientes',value:'—',note:''},
+        {cls:'',label:'Maior Receita Mai',value:'—',note:''},
+        {cls:'',label:'ROA Meta',value:'0,50%',note:''},
+      ],
+      roaBanker:{labels:['DN','MJ','NC','RI'],prev:[0.420,0.600,0.240,0.530],prevLabel:'Abr/26',cur:[null,null,null,null],curLabel:'Mai/26'},
+      clientTable:[{bk:'Total',cli:'—',aum:'—',rpc:'—',roa:'—',roaTot:'—',tot:true}],
+      clientNote:'Mai/26: aguardando consolidação de carteiras.',
+      aumBanker:{labels:['MJ','DN','NC','RI'],data:[null,null,null,null]},
+      l3m:{
+        bkColors:['#7c3aed','#2563eb','#16a34a','#ea580c'],
+        bkTotals:{DN:{dez:null,jan:42778,fev:37124,mar:51428,abr:44665,mai:null},MJ:{dez:null,jan:52941,fev:59072,mar:54407,abr:80798,mai:null},NC:{dez:null,jan:35044,fev:33200,mar:48310,abr:64114,mai:null},RI:{dez:null,jan:45416,fev:47812,mar:46416,abr:60222,mai:null}},
+        bkBreak:{DN:{labels:['Consultoria'],dez:[null],jan:[39129],fev:[37124],mar:[31399],abr:[43807],mai:[null],colors:['#3D754E']},MJ:{labels:['Consultoria'],dez:[null],jan:[49099],fev:[51151],mar:[48219],abr:[58857],mai:[null],colors:['#3D754E']},NC:{labels:['Consultoria'],dez:[null],jan:[25170],fev:[21030],mar:[38747],abr:[25439],mai:[null],colors:['#3D754E']},RI:{labels:['Consultoria'],dez:[null],jan:[45241],fev:[47812],mar:[46416],abr:[58246],mai:[null],colors:['#3D754E']}},
+        labels:['Jan','Fev','Mar','Abr','Mai']
+      }
+    }
+  };
+}
+
+async function inicializar() {
+  // Verificar se maio tem dados no Supabase e adicionar ao D
+  const headers = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
+  try {
+    const check = await fetch(`${SB_URL}/rest/v1/receita?mes=eq.2026-05-01&empresa=eq.RTS&select=id&limit=1`, {headers});
+    const rows = await check.json();
+    if(rows.length > 0) {
+      const maio = await carregarDoSupabase('2026-05-01');
+      D[4] = maio;
+      MONTHS.push('Mai/26');
+      document.getElementById('btnNext').disabled = false;
+    }
+  } catch(e) {
+    console.warn('Não foi possível carregar Mai/26 do Supabase:', e);
+  }
+  render();
+}
+
 function render(){
   const d=D[curM];
   document.getElementById('monthLabel').textContent=d.label;
@@ -410,8 +539,6 @@ function renderPaceChart(){
   var nMes=curM+1;
   var labels=['Jan/26','Fev/26','Mar/26','Abr/26'].slice(0,nMes);
   var mensal={DN:[42778,37124,51428,44665],MJ:[52941,59072,54407,80798],NC:[35044,33200,48310,64114],RI:[45416,47812,46416,60222]};
-  var mensalC={DN:[39129,37124,31399,43807],MJ:[49099,51151,48219,58857],NC:[25170,21030,38747,25439],RI:[45241,47812,46416,58246]};
-  var orcMesC=[168750/4,177188/4,206719/4,217055/4];
   var orcMes=[213850/4,225287/4,263818/4,266154/4];
   var bks=['DN','MJ','NC','RI'];
   var card=document.getElementById('paceReceitaCard');
@@ -419,21 +546,21 @@ function renderPaceChart(){
     var ctrl=document.createElement('div');
     ctrl.className='pace-btns';
     ctrl.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;';
-    ctrl.innerHTML=[['A','Total'],['B','Consultoria'],['C','Gap Total'],['D','Gap Consult.']].map(function(x){
+    ctrl.innerHTML=[['A','Mensal'],['C','Gap 1S26']].map(function(x){
       return '<button id="pbtn'+x[0]+'" onclick="setPaceView(\''+x[0]+'\')" style="font-size:11px;padding:3px 12px;border-radius:4px;cursor:pointer;font-family:inherit;transition:all .15s;">'+x[1]+'</button>';
     }).join('');
     var titleEl=card.querySelector('.card-title');
     if(titleEl)titleEl.after(ctrl);
   }
   if(!window._paceView)window._paceView='A';
-  buildPaceChart(window._paceView,{labels:labels,mensal:mensal,mensalC:mensalC,orcMes:orcMes,orcMesC:orcMesC,BKC:BKC,G:G,T:T,fmt:fmt,nMes:nMes,bks:bks});
+  buildPaceChart(window._paceView,{labels:labels,mensal:mensal,orcMes:orcMes,BKC:BKC,G:G,T:T,fmt:fmt,nMes:nMes,bks:bks});
   updatePaceBtns(window._paceView);
 }
 
 function setPaceView(v){window._paceView=v;renderPaceChart();updatePaceBtns(v);}
 
 function updatePaceBtns(active){
-  ['A','B','C','D'].forEach(function(id){
+  ['A','C'].forEach(function(id){
     var btn=document.getElementById('pbtn'+id);
     if(!btn)return;
     if(id===active){btn.style.background='var(--gl)';btn.style.color='#fff';btn.style.border='none';}
@@ -442,7 +569,7 @@ function updatePaceBtns(active){
 }
 
 function buildPaceChart(view,p){
-  var labels=p.labels,mensal=p.mensal,mensalC=p.mensalC,orcMes=p.orcMes,orcMesC=p.orcMesC,BKC=p.BKC,G=p.G,T=p.T,fmt=p.fmt,nMes=p.nMes,bks=p.bks;
+  var labels=p.labels,mensal=p.mensal,orcMes=p.orcMes,BKC=p.BKC,G=p.G,T=p.T,fmt=p.fmt,nMes=p.nMes,bks=p.bks;
   var baseScales={x:{grid:{display:false},ticks:{color:T,font:{size:11}}},y:{grid:{color:G},ticks:{color:T,font:{size:10},callback:function(v){return fmt(v);}}}};
   if(view==='A'){
     var orcYTD=orcMes.slice(0,nMes).reduce(function(a,b){return a+b;},0);
@@ -454,22 +581,9 @@ function buildPaceChart(view,p){
     });
     ds.push({label:'Orçado/banker',data:orcMes.slice(0,nMes).concat([null,orcYTD]),backgroundColor:'rgba(240,180,41,0.25)',borderColor:'#f0b429',borderWidth:1.5,borderRadius:3,borderSkipped:false,order:1});
     mkChart('paceReceitaChart',{type:'bar',data:{labels:labA,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{filter:function(i){return i.raw!=null;},callbacks:{label:function(c){return c.dataset.label+': '+fmt(c.raw);}}}},scales:baseScales}});
-  } else if(view==='B'){
-    var orcYTDB=orcMesC.slice(0,nMes).reduce(function(a,b){return a+b;},0);
-    var labB=labels.concat(['','YTD']);
-    var dsB=bks.map(function(bk){
-      var ytd=mensalC[bk].slice(0,nMes).reduce(function(a,b){return a+b;},0);
-      var bgArr=mensalC[bk].slice(0,nMes).map(function(){return BKC[bk]+'bb';}).concat([null,BKC[bk]]);
-      return{label:bk,data:mensalC[bk].slice(0,nMes).concat([null,ytd]),backgroundColor:bgArr,borderRadius:3,borderSkipped:false};
-    });
-    dsB.push({label:'Orçado/banker',data:orcMesC.slice(0,nMes).concat([null,orcYTDB]),backgroundColor:'rgba(240,180,41,0.25)',borderColor:'#f0b429',borderWidth:1.5,borderRadius:3,borderSkipped:false,order:1});
-    mkChart('paceReceitaChart',{type:'bar',data:{labels:labB,datasets:dsB},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{filter:function(i){return i.raw!=null;},callbacks:{label:function(c){return c.dataset.label+': '+fmt(c.raw);}}}},scales:baseScales}});
   } else {
-    var gapData=view==='D'
-      ?bks.map(function(bk){return mensalC[bk].slice(0,nMes).reduce(function(a,b){return a+b;},0)-orcMesC.slice(0,nMes).reduce(function(a,b){return a+b;},0);})
-      :bks.map(function(bk){return mensal[bk].slice(0,nMes).reduce(function(a,b){return a+b;},0)-orcMes.slice(0,nMes).reduce(function(a,b){return a+b;},0);});
-    var gapLabel=view==='D'?'Gap vs orçado consultoria':'Gap vs orçado total';
-    mkChart('paceReceitaChart',{type:'bar',data:{labels:bks,datasets:[{label:gapLabel,data:gapData,backgroundColor:gapData.map(function(v){return v>=0?'#5a9e6f':'#f87171';}),borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return(c.raw>=0?'+':'')+fmt(c.raw);}}}},scales:{x:{grid:{color:G},ticks:{color:T,font:{size:10},callback:function(v){return(v>=0?'+':'')+fmt(v);}}},y:{grid:{display:false},ticks:{color:T,font:{size:12}}}}}});
+    var gaps=bks.map(function(bk){return mensal[bk].slice(0,nMes).reduce(function(a,b){return a+b;},0)-orcMes.slice(0,nMes).reduce(function(a,b){return a+b;},0);});
+    mkChart('paceReceitaChart',{type:'bar',data:{labels:bks,datasets:[{label:'Gap vs orçado',data:gaps,backgroundColor:gaps.map(function(v){return v>=0?'#5a9e6f':'#f87171';}),borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return(c.raw>=0?'+':'')+fmt(c.raw);}}}},scales:{x:{grid:{color:G},ticks:{color:T,font:{size:10},callback:function(v){return(v>=0?'+':'')+fmt(v);}}},y:{grid:{display:false},ticks:{color:T,font:{size:12}}}}}});
   }
 }
 
@@ -483,7 +597,7 @@ function showCtab(group,id,btn){const card=btn.closest('.card');card.querySelect
 function toggleAcc(id){document.getElementById('body-'+id).classList.toggle('open');document.getElementById('arr-'+id).classList.toggle('open');}
 function changeMonth(dir){const n=curM+dir;if(n<0||n>=MONTHS.length)return;curM=n;render();}
 
-render();
+inicializar();
 </script>
 </body>
 </html>
