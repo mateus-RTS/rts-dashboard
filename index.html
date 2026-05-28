@@ -374,42 +374,71 @@ const SB_URL = 'https://zjhaprbilpoypwpwwxih.supabase.co';
 const SB_KEY = 'sb_publishable__b6wXAjX79DSy2EFk_T9sA_Z0qjgqAh';
 
 async function carregarDoSupabase(mesStr) {
-  // mesStr = '2026-05-01'
+  // mesStr = '2026-05-01' — lê receita_por_banker e dre views
   const headers = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
 
-  const [recResp, cusResp] = await Promise.all([
-    fetch(`${SB_URL}/rest/v1/receita?mes=eq.${mesStr}&empresa=eq.RTS&select=categoria,realizado`, {headers}),
-    fetch(`${SB_URL}/rest/v1/custos?mes=eq.${mesStr}&select=categoria,realizado`, {headers}),
+  const [rpbResp, dreResp] = await Promise.all([
+    fetch(`${SB_URL}/rest/v1/receita_por_banker?mes=eq.${mesStr}&order=banker`, {headers}),
+    fetch(`${SB_URL}/rest/v1/dre?mes=eq.${mesStr}`, {headers}),
   ]);
 
-  const recRows = await recResp.json();
-  const cusRows = await cusResp.json();
+  const rpbRows = await rpbResp.json();
+  const dreRows = await dreResp.json();
+  const dre = dreRows[0] || {};
 
-  // Agregar receita por categoria
-  const rec = {};
-  for(const r of recRows) rec[r.categoria] = (rec[r.categoria]||0) + parseFloat(r.realizado||0);
-  const consultoria = Math.round(rec.consultoria||0);
-  const crossell    = Math.round(rec.crossell||0);
+  // Totais
+  const consultoria = Math.round(rpbRows.reduce((s,r)=>s+parseFloat(r.consultoria||0),0));
+  const crossell    = Math.round(rpbRows.reduce((s,r)=>s+parseFloat(r.cross_sell||0),0));
   const recTotal    = consultoria + crossell;
+  const recLiq      = Math.round(parseFloat(dre.receita_liq||0)) || Math.round(recTotal*0.8367);
 
-  // Agregar custos por categoria
-  const cus = {};
-  for(const r of cusRows) cus[r.categoria] = (cus[r.categoria]||0) + parseFloat(r.realizado||0);
-  const cusTotal = Object.values(cus).reduce((a,b)=>a+b,0);
+  // Formatação
+  const fmtFull = v => v ? 'R$ ' + Math.round(v).toLocaleString('pt-BR') : '—';
+  const fmtK    = v => v >= 1000 ? 'R$ ' + (v/1000).toFixed(1).replace('.',',') + 'K' : 'R$ ' + Math.round(v);
 
-  const fmtK = v => v>=1000?`R$ ${(v/1000).toFixed(1)}K`:`R$ ${Math.round(v)}`;
-  const fmtKn = v => `-R$ ${Math.round(v).toLocaleString('pt-BR')}`;
+  // Banker com maior receita
+  const maiorBk = rpbRows.reduce((a,r)=>parseFloat(r.receita_total||0)>parseFloat(a.receita_total||0)?r:a, rpbRows[0]||{});
 
-  // Montar acordeon de custos
-  const catNames = {comercial:'Despesa Comercial',adm:'Despesas Administrativas',sistemas:'Sistemas',consol:'Consolidação',estrategia:'Estratégia',pessoas:'Pessoas'};
-  const acordeon = Object.entries(cus)
-    .filter(([k])=>catNames[k])
-    .sort((a,b)=>catNames[a[0]]?.localeCompare(catNames[b[0]]))
-    .map(([id,val])=>({
-      id, name:catNames[id]||id,
-      real: fmtKn(val), orc: '—', var:'—', vCls:'v-neu',
-      sub:[{name:'(detalhamento pendente)',real:fmtKn(val),orc:'—'}]
-    }));
+  // Lookup por banker
+  const bkData = {};
+  rpbRows.forEach(r => { bkData[r.banker] = {consultoria:parseFloat(r.consultoria||0), cross:parseFloat(r.cross_sell||0), total:parseFloat(r.receita_total||0)}; });
+
+  // bankerAll: linha por banker + Total
+  const bankerAll = rpbRows.map(r => ({
+    bk: r.banker,
+    consult: fmtFull(parseFloat(r.consultoria||0)),
+    du: '—',
+    cross: parseFloat(r.cross_sell||0) > 0 ? fmtFull(parseFloat(r.cross_sell||0)) : '—',
+    total: fmtFull(parseFloat(r.receita_total||0)),
+    var:'—', vc:'neu', roa:'—', roaBk:'—'
+  }));
+  bankerAll.push({bk:'Total',consult:fmtFull(consultoria),du:'—',cross:crossell>0?fmtFull(crossell):'—',total:fmtFull(recTotal),var:'—',vc:'neu',roa:'—',roaBk:'—',tot:true});
+
+  // bkTotals para YTD
+  const bkTotalsYTD = {
+    DN:{dez:null,jan:42778,fev:37124,mar:51428,abr:44665,mai:null},
+    MJ:{dez:null,jan:52941,fev:59072,mar:54407,abr:80798,mai:null},
+    NC:{dez:null,jan:35044,fev:33200,mar:48310,abr:64114,mai:null},
+    RI:{dez:null,jan:45416,fev:47812,mar:46416,abr:60222,mai:null}
+  };
+  rpbRows.forEach(r => { if(bkTotalsYTD[r.banker]) bkTotalsYTD[r.banker].mai = Math.round(parseFloat(r.receita_total||0)); });
+
+  // bkBreak para drill-down
+  const bkBreak = {
+    DN:{labels:['Consultoria'],dez:[null],jan:[39129],fev:[37124],mar:[31399],abr:[43807],mai:[null],colors:['#3D754E']},
+    MJ:{labels:['Consultoria'],dez:[null],jan:[49099],fev:[51151],mar:[48219],abr:[58857],mai:[null],colors:['#3D754E']},
+    NC:{labels:['Consultoria'],dez:[null],jan:[25170],fev:[21030],mar:[38747],abr:[25439],mai:[null],colors:['#3D754E']},
+    RI:{labels:['Consultoria'],dez:[null],jan:[45241],fev:[47812],mar:[46416],abr:[58246],mai:[null],colors:['#3D754E']}
+  };
+  rpbRows.forEach(r => { if(bkBreak[r.banker]) bkBreak[r.banker].mai = [Math.round(parseFloat(r.consultoria||0))]; });
+
+  // tabBankers por banker (Jan-Abr hardcoded, Mai do Supabase)
+  const tabBankers = {
+    mj:{rows:[['Consultoria','R$ 49.099','R$ 51.151','R$ 48.219','R$ 58.857',fmtFull(bkData.MJ&&bkData.MJ.consultoria||0)],['Total','R$ 52.941','R$ 59.072','R$ 54.407','R$ 80.798',fmtFull(bkData.MJ&&bkData.MJ.total||0)]]},
+    dn:{rows:[['Consultoria','R$ 39.129','R$ 37.124','R$ 31.399','R$ 43.807',fmtFull(bkData.DN&&bkData.DN.consultoria||0)],['Total','R$ 42.778','R$ 37.124','R$ 51.428','R$ 44.665',fmtFull(bkData.DN&&bkData.DN.total||0)]]},
+    ri:{rows:[['Consultoria','R$ 45.241','R$ 47.812','R$ 46.416','R$ 58.246',fmtFull(bkData.RI&&bkData.RI.consultoria||0)],['Total','R$ 45.416','R$ 47.812','R$ 46.416','R$ 60.222',fmtFull(bkData.RI&&bkData.RI.total||0)]]},
+    nc:{rows:[['Consultoria','R$ 25.170','R$ 21.030','R$ 38.747','R$ 25.439',fmtFull(bkData.NC&&bkData.NC.consultoria||0)],['Total','R$ 35.044','R$ 33.200','R$ 48.310','R$ 64.114',fmtFull(bkData.NC&&bkData.NC.total||0)]]}
+  };
 
   return {
     label: 'Mai/26',
@@ -417,74 +446,73 @@ async function carregarDoSupabase(mesStr) {
     visao:{
       metrics:[
         {cls:'',label:'AUM Custódia',value:'—',note:'Aguardando consolidação'},
-        {cls:'',label:'Receita Líquida',value:fmtK(recTotal),note:'Fonte: Nibo/Supabase'},
-        {cls:'',label:'Lucro Líquido',value:'—',note:'Aguardando custos finais'},
-        {cls:'',label:'Margem Líquida',value:'—',note:'—'},
+        {cls:'',label:'Receita Líquida',value:fmtK(recLiq),note:'Orçado: R$ 237K'},
+        {cls:'',label:'Lucro Líquido',value:'—',note:'Aguardando custos'},
+        {cls:'',label:'Margem Líquida',value:'—',note:'Aguardando custos'},
         {cls:'',label:'ROA Consultoria',value:'—',note:'Aguardando AUM'},
         {cls:'',label:'Caixa RTS',value:'—',note:'Aguardando consolidação'},
       ],
-      aumOrc:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],real:[567.4,582.0,583.6,612.9,null],orc:[575,597.5,621.1,675.1,null],noteText:'Mai/26: aguardando AUM'},
+      aumOrc:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],real:[567.4,582.0,583.6,612.9,null],orc:[575,597.5,621.1,675.1,null],noteText:'Mai/26: AUM aguardando consolidação.'},
       roa:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],real:[0.437,0.41,0.51,0.45,null],orc:[0.45,0.45,0.50,0.50,0.50]},
-      recLuc:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],rec:[149.8,156.0,211.1,210.5,Math.round(recTotal/1000*10)/10],luc:[72.6,73.9,126.4,113.9,null]},
-      marg:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],real:[48.5,47.4,60.0,54.0,null],orc:[null,null,null,null,54],alertNote:'Mai/26: margem pendente.'},
+      recLuc:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],rec:[149.8,156.0,211.1,210.5,Math.round(recLiq/100)/10],luc:[72.6,73.9,126.4,113.9,null]},
+      marg:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],real:[48.5,47.4,60.0,54.0,null],orc:[null,null,null,null,null],alertNote:'Mai/26: margem pendente — custos não importados.'},
       t1:null, bankerReceita:[]
     },
     receita:{
       metrics:[
-        {cls:'',label:'Receita Total Mai',value:fmtK(recTotal),note:'Fonte: Supabase (parcial)'},
-        {cls:'',label:'Consultoria RTS',value:fmtK(consultoria),note:`${recRows.length} lançamentos`},
-        {cls:'',label:'Cross-sell AUGE',value:fmtK(crossell),note:'Fonte: Supabase'},
+        {cls:'',label:'Receita Total Mai',value:fmtK(recTotal),note:'Fonte: Supabase'},
+        {cls:'',label:'Consultoria RTS',value:fmtK(consultoria),note:rpbRows.length+' bankers'},
+        {cls:'',label:'Cross-sell AUGE',value:crossell>0?fmtK(crossell):'R$ 0',note:''},
         {cls:'',label:'Receita / DU',value:'—',note:'Aguardando DU mai'},
-        {cls:'',label:'Maior Receita Mai',value:'—',note:'Aguardando banker breakdown'},
+        {cls:'',label:'Maior Receita Mai',value:maiorBk.banker||'—',note:maiorBk.receita_total?fmtFull(parseFloat(maiorBk.receita_total)):''},
       ],
-      recRts:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],consult:[158639,157117,164781,186349,consultoria],consultOrc:[168750,177188,206719,217055,217055],fin:[2880,1723,1694,1800,0],recTotOrc:[213850,229362,257977,270396,270396],recTotReal:[179000,178931,252255,251600,recTotal]},
-      du:{prev:{label:'Abr/26',val:'R$ 8.470',sub:'consultoria / DU'},cur:{label:'Mai/26',val:'—',sub:'aguardando'},info:'Mai/26: dados parciais do Supabase.'},
-      charts:{consult:[158639,157117,164781,186349,consultoria],bkTotals:{dez:null,jan:52941,fev:59072,mar:54407,abr:80798,mai:null},DN:{dez:null,jan:42778,fev:37124,mar:51428,abr:45798,mai:null},NC:{dez:null,jan:35044,fev:33200,mar:48310,abr:26595,mai:null},RI:{dez:null,jan:45416,fev:47812,mar:46416,abr:60894,mai:null}},
-      bankerAll:[{bk:'Total',consult:fmtK(consultoria),du:'—',cross:fmtK(crossell),total:fmtK(recTotal),var:'—',vc:'neu',roa:'—',roaBk:'—',tot:true}],
+      recRts:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],consult:[158639,157117,164781,186349,consultoria],consultOrc:[168750,177188,206719,217055,227907],fin:[2880,1723,1694,1800,0],recTotOrc:[213850,229362,257977,270396,283332],recTotReal:[179000,178931,252255,251600,recTotal]},
+      du:{prev:{label:'Abr/26 — 22 DU',val:'R$ 8.470',sub:'consultoria / DU'},cur:{label:'Mai/26',val:'—',sub:'aguardando'},info:'Mai/26: dados parciais. Custos e DU pendentes.'},
+      charts:{consult:[158639,157117,164781,186349,consultoria],bkTotals:{dez:null,jan:52941,fev:59072,mar:54407,abr:80798},DN:{dez:null,jan:42778,fev:37124,mar:51428,abr:45798},NC:{dez:null,jan:35044,fev:33200,mar:48310,abr:26595},RI:{dez:null,jan:45416,fev:47812,mar:46416,abr:60894}},
+      bankerAll,
       auge:{linhas:[{nome:'Cross-sell',cor:'#f0b429',jan:{},fev:{},mar:{},abr:{},mai:{total:crossell}}],prevLabel:'Abr/26',curLabel:'Mai/26'},
-      tabBankers:{mj:{rows:[['Total','—','—','—','—','—']]},dn:{rows:[['Total','—','—','—','—','—']]},ri:{rows:[['Total','—','—','—','—','—']]},nc:{rows:[['Total','—','—','—','—','—']]}},
+      tabBankers,
       tabHeaders:['Linha','Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],
       roaBanker:[{bk:'Total',v:'—'}]
     },
     custos:{
       metrics:[
-        {cls:'',label:'Custo Total Mai',value:fmtK(cusTotal),note:'Fonte: Supabase'},
-        {cls:'',label:'vs Orçado',value:'—',note:'Orçado pendente'},
-        {cls:'',label:'Pessoas',value:fmtK(cus.pessoas||0),note:''},
-        {cls:'',label:'Desp. Administrativas',value:fmtK(cus.adm||0),note:''},
+        {cls:'',label:'Custo Total Mai',value:'—',note:'Não importado ainda'},
+        {cls:'',label:'vs Orçado',value:'—',note:''},
+        {cls:'',label:'Pessoas',value:'—',note:''},
+        {cls:'',label:'Desp. Administrativas',value:'—',note:''},
       ],
-      chart:{labels:Object.keys(cus).map(k=>catNames[k]||k),real:Object.values(cus).map(Math.round),orc:Object.values(cus).map(()=>0)},
-      varChart:{labels:Object.keys(cus).map(k=>catNames[k]||k),vals:Object.values(cus).map(()=>0)},
-      totalReal: fmtKn(cusTotal), totalOrc:'—', totalVar:'—', totalVCls:'v-neu',
-      warnNote:'Mai/26: dados do Supabase. Orçado pendente.',
-      acordeon,
+      chart:{labels:['Aguardando'],real:[0],orc:[0]},
+      varChart:{labels:['Aguardando'],vals:[0]},
+      totalReal:'—', totalOrc:'—', totalVar:'—', totalVCls:'v-neu',
+      warnNote:'Mai/26: custos ainda não importados.',
+      acordeon:[],
     },
     bankers:{
       metrics:[
         {cls:'',label:'AUM Total RTS',value:'—',note:'Aguardando consolidação'},
         {cls:'',label:'Total Clientes',value:'—',note:''},
-        {cls:'',label:'Maior Receita Mai',value:'—',note:''},
-        {cls:'',label:'ROA Meta',value:'0,50%',note:''},
+        {cls:'',label:'Maior Receita Mai',value:maiorBk.banker||'—',note:maiorBk.receita_total?fmtFull(parseFloat(maiorBk.receita_total)):''},
+        {cls:'',label:'ROA Meta',value:'0,50%',note:'ROA aguardando AUM'},
       ],
       roaBanker:{labels:['DN','MJ','NC','RI'],prev:[0.420,0.600,0.240,0.530],prevLabel:'Abr/26',cur:[null,null,null,null],curLabel:'Mai/26'},
-      clientTable:[{bk:'Total',cli:'—',aum:'—',rpc:'—',roa:'—',roaTot:'—',tot:true}],
-      clientNote:'Mai/26: aguardando consolidação de carteiras.',
-      aumBanker:{labels:['MJ','DN','NC','RI'],data:[null,null,null,null]},
+      clientTable:rpbRows.map(r=>({bk:r.banker,cli:'—',aum:'—',rpc:'—',roa:'—',roaTot:'—'})).concat([{bk:'Total',cli:'—',aum:'—',rpc:'—',roa:'—',roaTot:'—',tot:true}]),
+      clientNote:'Mai/26: AUM e nº de clientes aguardando consolidação.',
+      aumBanker:{labels:['DN','MJ','NC','RI'],data:[null,null,null,null]},
       l3m:{
-        bkColors:['#7c3aed','#2563eb','#16a34a','#ea580c'],
-        bkTotals:{DN:{dez:null,jan:42778,fev:37124,mar:51428,abr:44665,mai:null},MJ:{dez:null,jan:52941,fev:59072,mar:54407,abr:80798,mai:null},NC:{dez:null,jan:35044,fev:33200,mar:48310,abr:64114,mai:null},RI:{dez:null,jan:45416,fev:47812,mar:46416,abr:60222,mai:null}},
-        bkBreak:{DN:{labels:['Consultoria'],dez:[null],jan:[39129],fev:[37124],mar:[31399],abr:[43807],mai:[null],colors:['#3D754E']},MJ:{labels:['Consultoria'],dez:[null],jan:[49099],fev:[51151],mar:[48219],abr:[58857],mai:[null],colors:['#3D754E']},NC:{labels:['Consultoria'],dez:[null],jan:[25170],fev:[21030],mar:[38747],abr:[25439],mai:[null],colors:['#3D754E']},RI:{labels:['Consultoria'],dez:[null],jan:[45241],fev:[47812],mar:[46416],abr:[58246],mai:[null],colors:['#3D754E']}},
+        bkColors:{DN:'#5a9e6f',MJ:'#3D754E',NC:'#60a5fa',RI:'#a3d9b1'},
+        bkTotals:bkTotalsYTD,
+        bkBreak,
         labels:['Jan','Fev','Mar','Abr','Mai']
       }
     }
   };
 }
-
 async function inicializar() {
   // Verificar se maio tem dados no Supabase e adicionar ao D
   const headers = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
   try {
-    const check = await fetch(`${SB_URL}/rest/v1/receita?mes=eq.2026-05-01&empresa=eq.RTS&select=id&limit=1`, {headers});
+    const check = await fetch(`${SB_URL}/rest/v1/receita_banker?mes=eq.2026-05-01&select=id&limit=1`, {headers});
     const rows = await check.json();
     if(rows.length > 0) {
       const maio = await carregarDoSupabase('2026-05-01');
@@ -537,9 +565,18 @@ function renderPaceChart(){
   var G='rgba(255,255,255,0.05)',T='#a0a0a0';
   var fmt=function(v){return v==null?'':'R$'+Math.round(v/1000)+'K';};
   var nMes=curM+1;
-  var labels=['Jan/26','Fev/26','Mar/26','Abr/26'].slice(0,nMes);
-  var mensal={DN:[42778,37124,51428,44665],MJ:[52941,59072,54407,80798],NC:[35044,33200,48310,64114],RI:[45416,47812,46416,60222]};
-  var orcMes=[213850/4,225287/4,263818/4,266154/4];
+  var allPaceLabels=['Jan/26','Fev/26','Mar/26','Abr/26'];
+  var allMensal={DN:[42778,37124,51428,44665],MJ:[52941,59072,54407,80798],NC:[35044,33200,48310,64114],RI:[45416,47812,46416,60222]};
+  var allOrcMes=[213850/4,225287/4,263818/4,266154/4];
+  if(D[4]&&D[4]._fromSupabase){
+    allPaceLabels.push('Mai/26');
+    var maiT=D[4].bankers.l3m.bkTotals;
+    ['DN','MJ','NC','RI'].forEach(function(bk){allMensal[bk]=allMensal[bk].concat([maiT[bk].mai||0]);});
+    allOrcMes.push(283332/4);
+  }
+  var labels=allPaceLabels.slice(0,nMes);
+  var mensal=allMensal;
+  var orcMes=allOrcMes;
   var bks=['DN','MJ','NC','RI'];
   var card=document.getElementById('paceReceitaCard');
   if(card&&!card.querySelector('.pace-btns')){
@@ -590,7 +627,7 @@ function buildPaceChart(view,p){
 function renderCustos(d){const c=d.custos;document.getElementById('page-custos').innerHTML=`<div class="metrics">${c.metrics.map(m=>`<div class="mc ${m.cls}"><div class="mc-label">${m.label}</div><div class="mc-value">${m.value}</div><div class="mc-note">${m.note}</div></div>`).join('')}</div><div class="row2e"><div class="card"><div class="gbar"></div><div class="card-title">Custos — Realizado vs Orçado</div><div class="card-sub">${d.label} por grupo</div><div class="legend"><span class="li"><span class="ld" style="background:#3D754E;"></span>Realizado</span><span class="li"><span class="ld" style="background:rgba(240,180,41,0.35);border:1px solid #f0b429;"></span>Orçado</span></div><div style="position:relative;width:100%;height:250px;"><canvas id="custosChart"></canvas></div></div><div class="card"><div class="gbar"></div><div class="card-title">Variação % vs Orçado — ${d.label}</div><div class="card-sub">Positivo = abaixo do orçado (favorável)</div><div style="position:relative;width:100%;height:250px;"><canvas id="varChart"></canvas></div></div></div><div class="card row1"><div class="gbar"></div><div class="card-title">Detalhamento por grupo — clique para expandir</div><div class="card-sub">Realizado vs Orçado · ${d.label}</div><div class="acc-col-heads"><span class="acc-col-head">Real</span><span class="acc-col-head">Orçado</span><span class="acc-col-head">Var %</span></div>${c.acordeon.map(a=>`<div class="acc-group"><div class="acc-header" onclick="toggleAcc('${a.id}')"><div class="acc-left"><span class="acc-arrow" id="arr-${a.id}">▶</span><span class="acc-name">${a.name}</span></div><div class="acc-vals"><span class="acc-val">${a.real}</span><span class="acc-val">${a.orc}</span><span class="acc-var ${a.vCls}">${a.var}</span></div></div><div class="acc-body" id="body-${a.id}">${a.sub.map(s=>`<div class="acc-sub"><span class="acc-sub-name">${s.name}</span><div class="acc-sub-vals"><span class="acc-sub-val">${s.real}</span><span class="acc-sub-val">${s.orc}</span></div></div>`).join('')}</div></div>`).join('')}<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 8px;border-top:1px solid var(--green);margin-top:4px;"><span style="font-size:12px;font-weight:500;color:var(--gl);">Custo Total</span><div class="acc-vals"><span class="acc-val" style="color:var(--gl);">${c.totalReal}</span><span class="acc-val" style="color:var(--gl);">${c.totalOrc}</span><span class="acc-var ${c.totalVCls}">${c.totalVar}</span></div></div><div class="${c.totalVCls==='v-neg'?'warn-note':'note'}">${c.warnNote}</div></div>`;mkChart('custosChart',{type:'bar',data:{labels:c.chart.labels,datasets:[{label:'Realizado',data:c.chart.real,backgroundColor:'#3D754E',borderRadius:4},{label:'Orçado',data:c.chart.orc,backgroundColor:'rgba(240,180,41,0.22)',borderRadius:4,borderWidth:1.5,borderColor:'#f0b429'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:9},maxRotation:25}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});const vv=c.varChart.vals;mkChart('varChart',{type:'bar',data:{labels:c.varChart.labels,datasets:[{data:vv,backgroundColor:vv.map(v=>v>=0?'rgba(90,158,111,0.7)':'rgba(248,113,113,0.7)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:9},maxRotation:25}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v+'%'}}}}});}
 
 function renderBankers(d){const b=d.bankers;const l=b.l3m;const bankers=['DN','MJ','NC','RI'];document.getElementById('page-bankers').innerHTML=`<div class="metrics">${b.metrics.map(m=>`<div class="mc ${m.cls}"><div class="mc-label">${m.label}</div><div class="mc-value">${m.value}</div><div class="mc-note">${m.note}</div></div>`).join('')}</div><div class="row2e"><div class="card"><div class="gbar"></div><div class="card-title">AUM por Banker — ${d.label}</div><div class="card-sub">Custódia sob assessoria (R$ MM)</div><div style="position:relative;width:100%;height:210px;"><canvas id="aumBankerChart"></canvas></div></div><div class="card"><div class="gbar"></div><div class="card-title">ROA Consultoria por Banker</div><div class="card-sub">${b.roaBanker.prevLabel} vs ${b.roaBanker.curLabel}</div><div style="position:relative;width:100%;height:210px;"><canvas id="roaBankerChart"></canvas></div><div class="warn-note">⚠ ROA NC caiu — impacto IDB.</div></div></div><div class="card row1"><div class="gbar"></div><div class="card-title">YTD — Receita por Banker</div><div class="card-sub">${l.labels.join(', ')} · clique em um banker para ver detalhamento</div><div class="hint">↓ Clique em qualquer barra para expandir o detalhamento por linha</div><div class="legend"><span class="li"><span class="ld" style="background:rgba(61,117,78,0.2);border:1px solid #3D754E;"></span>Dez/25</span>${l.labels.map((lbl,i)=>i>0?`<span class="li"><span class="ld" style="background:rgba(61,117,78,${0.3+i*0.25});"></span>${lbl}</span>`:'').join('')}</div><div style="position:relative;width:100%;height:200px;"><canvas id="l3mTop"></canvas></div><div class="drill-divider" id="l3mDivider"><div class="drill-line"></div><div class="drill-label">Detalhamento: <span class="drill-pill" id="l3mPill">—</span></div><div class="drill-line"></div></div><div class="bottom-wrap" id="l3mBotWrap"><div class="legend" id="l3mLegend" style="margin-bottom:8px;"></div><div class="bottom-grid"><div style="position:relative;width:100%;height:220px;"><canvas id="l3mBot"></canvas></div><div class="mini-tbl" id="l3mMiniTable"></div></div></div></div><div class="card row1"><div class="gbar"></div><div class="card-title">Clientes e Receita média por Cliente — ${d.label}</div><table><thead><tr><th>Banker</th><th>Clientes</th><th>AUM (MM)</th><th>Rec/Cliente</th><th>ROA Consult.</th><th>ROA Total</th></tr></thead><tbody>${b.clientTable.map(row=>`<tr${row.tot?' class="tr-total"':''}><td>${row.bk}</td><td>${row.cli}</td><td>${row.aum}</td><td>${row.rpc}</td><td>${row.roa}</td><td style="${row.roaTot&&row.roaTot!==row.roa?'color:var(--gl);font-weight:600':''}">${row.roaTot||'—'}</td></tr>`).join('')}</tbody></table><div class="note">${b.clientNote}</div></div>`;mkChart('aumBankerChart',{type:'bar',data:{labels:b.aumBanker.labels,datasets:[{data:b.aumBanker.data,backgroundColor:['#3D754E','#5a9e6f','#3D754E','#5a9e6f'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:80,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+v+'MM'}}}}});mkChart('roaBankerChart',{type:'bar',data:{labels:b.roaBanker.labels,datasets:[{label:b.roaBanker.prevLabel,data:b.roaBanker.prev,backgroundColor:'rgba(61,117,78,0.4)',borderRadius:3},{label:b.roaBanker.curLabel,data:b.roaBanker.cur,backgroundColor:'#3D754E',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v.toFixed(2)+'%'}}}}});document.getElementById('page-bankers').innerHTML=`<div class="metrics">${b.metrics.map(m=>`<div class="mc ${m.cls}"><div class="mc-label">${m.label}</div><div class="mc-value">${m.value}</div><div class="mc-note">${m.note}</div></div>`).join('')}</div><div class="row2e"><div class="card"><div class="gbar"></div><div class="card-title">AUM por Banker — ${d.label}</div><div class="card-sub">Custódia sob assessoria (R$ MM)</div><div style="position:relative;width:100%;height:210px;"><canvas id="aumBankerChart"></canvas></div></div><div class="card"><div class="gbar"></div><div class="card-title">ROA Consultoria por Banker</div><div class="card-sub">${b.roaBanker.prevLabel} vs ${b.roaBanker.curLabel}</div><div style="position:relative;width:100%;height:210px;"><canvas id="roaBankerChart"></canvas></div><div class="warn-note">⚠ ROA NC caiu — impacto IDB.</div></div></div><div class="card row1"><div class="gbar"></div><div class="card-title">YTD — Receita por Banker</div><div class="card-sub">${l.labels.join(', ')} · clique em um banker para ver detalhamento</div><div class="hint">↓ Clique em qualquer barra para expandir o detalhamento por linha</div><div class="legend"><span class="li"><span class="ld" style="background:rgba(61,117,78,0.2);border:1px solid #3D754E;"></span>Dez/25</span>${l.labels.map((lbl,i)=>i>0?`<span class="li"><span class="ld" style="background:rgba(61,117,78,${0.3+i*0.25});"></span>${lbl}</span>`:'').join('')}</div><div style="position:relative;width:100%;height:200px;"><canvas id="l3mTop"></canvas></div><div class="drill-divider" id="l3mDivider"><div class="drill-line"></div><div class="drill-label">Detalhamento: <span class="drill-pill" id="l3mPill">—</span></div><div class="drill-line"></div></div><div class="bottom-wrap" id="l3mBotWrap"><div class="legend" id="l3mLegend" style="margin-bottom:8px;"></div><div class="bottom-grid"><div style="position:relative;width:100%;height:220px;"><canvas id="l3mBot"></canvas></div><div class="mini-tbl" id="l3mMiniTable"></div></div></div></div><div class="card row1"><div class="gbar"></div><div class="card-title">Clientes e Receita média por Cliente — ${d.label}</div><table><thead><tr><th>Banker</th><th>Clientes</th><th>AUM (MM)</th><th>Rec/Cliente</th><th>ROA</th></tr></thead><tbody>${b.clientTable.map(row=>`<tr${row.tot?' class="tr-total"':''}><td>${row.bk}</td><td>${row.cli}</td><td>${row.aum}</td><td>${row.rpc}</td><td>${row.roa}</td></tr>`).join('')}</tbody></table><div class="note">${b.clientNote}</div></div>`;
-mkChart('aumBankerChart',{type:'bar',data:{labels:b.aumBanker.labels,datasets:[{data:b.aumBanker.data,backgroundColor:['#3D754E','#5a9e6f','#3D754E','#5a9e6f'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:80,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+v+'MM'}}}}});mkChart('roaBankerChart',{type:'bar',data:{labels:b.roaBanker.labels,datasets:[{label:b.roaBanker.prevLabel,data:b.roaBanker.prev,backgroundColor:'rgba(61,117,78,0.4)',borderRadius:3},{label:b.roaBanker.curLabel,data:b.roaBanker.cur,backgroundColor:'#3D754E',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v.toFixed(2)+'%'}}}}});const hasF=l.labels[1],hasM=l.labels[2],hasA=l.labels[3];const l3mDatasets=[{label:l.labels[0],data:bankers.map(bk=>l.bkTotals[bk].jan),backgroundColor:'rgba(61,117,78,0.55)',borderRadius:3}];if(hasF)l3mDatasets.push({label:l.labels[1],data:bankers.map(bk=>l.bkTotals[bk].fev),backgroundColor:(hasM||hasA)?'rgba(61,117,78,0.55)':bankers.map(bk=>l.bkColors[bk]),borderRadius:3});if(hasM)l3mDatasets.push({label:l.labels[2],data:bankers.map(bk=>l.bkTotals[bk].mar),backgroundColor:hasA?'rgba(61,117,78,0.55)':bankers.map(bk=>l.bkColors[bk]),borderRadius:3});if(hasA)l3mDatasets.push({label:l.labels[3],data:bankers.map(bk=>l.bkTotals[bk].abr||0),backgroundColor:bankers.map(bk=>l.bkColors[bk]),borderRadius:3});let l3mBotChart=null,l3mCurrent=null;const l3mTop=new Chart(document.getElementById('l3mTop'),{type:'bar',data:{labels:bankers,datasets:l3mDatasets},options:{responsive:true,maintainAspectRatio:false,onClick(evt,els){if(!els.length)return;openL3mDrill(bankers[els[0].index]);},plugins:{legend:{display:false},tooltip:{callbacks:{footer:()=>['Clique para ver breakdown por linha']}}},scales:{x:{grid:{display:false},ticks:{color:'#F9F5EF',font:{size:12,weight:'500'}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});function openL3mDrill(banker){const lastDsIdx=hasM?3:hasF?2:1;if(l3mCurrent===banker){document.getElementById('l3mBotWrap').classList.remove('open');document.getElementById('l3mDivider').classList.remove('visible');l3mCurrent=null;l3mTop.data.datasets[lastDsIdx].backgroundColor=bankers.map(bk=>l.bkColors[bk]);l3mTop.update();return;}l3mCurrent=banker;l3mTop.data.datasets[lastDsIdx].backgroundColor=bankers.map(bk=>bk===banker?l.bkColors[bk]:'rgba(61,117,78,0.2)');l3mTop.update();const pill=document.getElementById('l3mPill');pill.textContent=banker;pill.style.background=l.bkColors[banker];pill.style.color=['#a3d9b1','#5a9e6f'].includes(l.bkColors[banker])?'#1A1A1B':'#fff';document.getElementById('l3mDivider').classList.add('visible');const bkd=l.bkBreak[banker];document.getElementById('l3mLegend').innerHTML=bkd.labels.map((lb,i)=>`<span class="li"><span class="ld" style="background:${bkd.colors[i]};"></span>${lb}</span>`).join('');if(l3mBotChart){l3mBotChart.destroy();l3mBotChart=null;}const drillLabels=hasA?[l.labels[0],l.labels[1],l.labels[2],l.labels[3]]:hasM?[l.labels[0],l.labels[1],l.labels[2]]:hasF?[l.labels[0],l.labels[1]]:[l.labels[0]];l3mBotChart=new Chart(document.getElementById('l3mBot'),{type:'bar',data:{labels:drillLabels,datasets:bkd.labels.map((label,i)=>({label,data:hasA?[bkd.jan[i],bkd.fev[i],bkd.mar[i],(bkd.abr?bkd.abr[i]:0)]:hasM?[bkd.jan[i],bkd.fev[i],bkd.mar[i]]:hasF?[bkd.jan[i],bkd.fev[i]]:[bkd.jan[i]],backgroundColor:bkd.colors[i],borderRadius:3}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});const fmt2=v=>(v&&v>0)?'R$'+(v>=1000?(v/1000).toFixed(1)+'K':Math.round(v)):'<span style="color:#3d3d3e">—</span>';const tot=l.bkTotals[banker];document.getElementById('l3mMiniTable').innerHTML='<table><thead><tr><th>Linha</th><th>'+l.labels[0]+'</th>'+(hasF?'<th>'+l.labels[1]+'</th>':'')+(hasM?'<th>'+l.labels[2]+'</th>':'')+(hasA?'<th>'+l.labels[3]+'</th>':'')+'</tr></thead><tbody>'+bkd.labels.map((lb,i)=>'<tr><td style="color:var(--muted);display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:2px;background:'+bkd.colors[i]+';flex-shrink:0;display:inline-block;"></span>'+lb+'</td><td>'+fmt2(bkd.jan[i])+'</td>'+(hasF?'<td>'+fmt2(bkd.fev[i])+'</td>':'')+(hasM?'<td>'+fmt2(bkd.mar[i])+'</td>':'')+(hasA?'<td>'+fmt2(bkd.abr?bkd.abr[i]:0)+'</td>':'')+'</tr>').join('')+'<tr class="tr-tot"><td>Total</td><td>'+fmt2(tot.jan)+'</td>'+(hasF?'<td>'+fmt2(tot.fev)+'</td>':'')+(hasM?'<td>'+fmt2(tot.mar)+'</td>':'')+(hasA?'<td>'+fmt2(tot.abr||0)+'</td>':'')+'</tr></tbody></table>';document.getElementById('l3mBotWrap').classList.add('open');}}
+mkChart('aumBankerChart',{type:'bar',data:{labels:b.aumBanker.labels,datasets:[{data:b.aumBanker.data,backgroundColor:['#3D754E','#5a9e6f','#3D754E','#5a9e6f'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{min:80,grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+v+'MM'}}}}});mkChart('roaBankerChart',{type:'bar',data:{labels:b.roaBanker.labels,datasets:[{label:b.roaBanker.prevLabel,data:b.roaBanker.prev,backgroundColor:'rgba(61,117,78,0.4)',borderRadius:3},{label:b.roaBanker.curLabel,data:b.roaBanker.cur,backgroundColor:'#3D754E',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},color:lc,boxWidth:9,padding:8}}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>v.toFixed(2)+'%'}}}}});const hasF=l.labels[1],hasM=l.labels[2],hasA=l.labels[3],hasMai=l.labels[4];const l3mDatasets=[{label:l.labels[0],data:bankers.map(bk=>l.bkTotals[bk].jan),backgroundColor:'rgba(61,117,78,0.55)',borderRadius:3}];if(hasF)l3mDatasets.push({label:l.labels[1],data:bankers.map(bk=>l.bkTotals[bk].fev),backgroundColor:(hasM||hasA)?'rgba(61,117,78,0.55)':bankers.map(bk=>l.bkColors[bk]),borderRadius:3});if(hasM)l3mDatasets.push({label:l.labels[2],data:bankers.map(bk=>l.bkTotals[bk].mar),backgroundColor:hasA?'rgba(61,117,78,0.55)':bankers.map(bk=>l.bkColors[bk]),borderRadius:3});if(hasA)l3mDatasets.push({label:l.labels[3],data:bankers.map(bk=>l.bkTotals[bk].abr||0),backgroundColor:hasMai?'rgba(61,117,78,0.55)':bankers.map(bk=>l.bkColors[bk]),borderRadius:3});if(hasMai)l3mDatasets.push({label:l.labels[4],data:bankers.map(bk=>(l.bkTotals[bk].mai||0)),backgroundColor:bankers.map(bk=>l.bkColors[bk]),borderRadius:3});let l3mBotChart=null,l3mCurrent=null;const l3mTop=new Chart(document.getElementById('l3mTop'),{type:'bar',data:{labels:bankers,datasets:l3mDatasets},options:{responsive:true,maintainAspectRatio:false,onClick(evt,els){if(!els.length)return;openL3mDrill(bankers[els[0].index]);},plugins:{legend:{display:false},tooltip:{callbacks:{footer:()=>['Clique para ver breakdown por linha']}}},scales:{x:{grid:{display:false},ticks:{color:'#F9F5EF',font:{size:12,weight:'500'}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});function openL3mDrill(banker){const lastDsIdx=hasMai?4:hasA?3:hasM?2:hasF?1:0;if(l3mCurrent===banker){document.getElementById('l3mBotWrap').classList.remove('open');document.getElementById('l3mDivider').classList.remove('visible');l3mCurrent=null;l3mTop.data.datasets[lastDsIdx].backgroundColor=bankers.map(bk=>l.bkColors[bk]);l3mTop.update();return;}l3mCurrent=banker;l3mTop.data.datasets[lastDsIdx].backgroundColor=bankers.map(bk=>bk===banker?l.bkColors[bk]:'rgba(61,117,78,0.2)');l3mTop.update();const pill=document.getElementById('l3mPill');pill.textContent=banker;pill.style.background=l.bkColors[banker];pill.style.color=['#a3d9b1','#5a9e6f'].includes(l.bkColors[banker])?'#1A1A1B':'#fff';document.getElementById('l3mDivider').classList.add('visible');const bkd=l.bkBreak[banker];document.getElementById('l3mLegend').innerHTML=bkd.labels.map((lb,i)=>`<span class="li"><span class="ld" style="background:${bkd.colors[i]};"></span>${lb}</span>`).join('');if(l3mBotChart){l3mBotChart.destroy();l3mBotChart=null;}const drillLabels=hasMai?[l.labels[0],l.labels[1],l.labels[2],l.labels[3],l.labels[4]]:hasA?[l.labels[0],l.labels[1],l.labels[2],l.labels[3]]:hasM?[l.labels[0],l.labels[1],l.labels[2]]:hasF?[l.labels[0],l.labels[1]]:[l.labels[0]];l3mBotChart=new Chart(document.getElementById('l3mBot'),{type:'bar',data:{labels:drillLabels,datasets:bkd.labels.map((label,i)=>({label,data:hasMai?[bkd.jan[i],bkd.fev[i],bkd.mar[i],(bkd.abr?bkd.abr[i]:0),(bkd.mai?bkd.mai[i]:0)]:hasA?[bkd.jan[i],bkd.fev[i],bkd.mar[i],(bkd.abr?bkd.abr[i]:0)]:hasM?[bkd.jan[i],bkd.fev[i],bkd.mar[i]]:hasF?[bkd.jan[i],bkd.fev[i]]:[bkd.jan[i]],backgroundColor:bkd.colors[i],borderRadius:3}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:lc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:lc,font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'K'}}}}});const fmt2=v=>(v&&v>0)?'R$'+(v>=1000?(v/1000).toFixed(1)+'K':Math.round(v)):'<span style="color:#3d3d3e">—</span>';const tot=l.bkTotals[banker];document.getElementById('l3mMiniTable').innerHTML='<table><thead><tr><th>Linha</th><th>'+l.labels[0]+'</th>'+(hasF?'<th>'+l.labels[1]+'</th>':'')+(hasM?'<th>'+l.labels[2]+'</th>':'')+(hasA?'<th>'+l.labels[3]+'</th>':'')+(hasMai?'<th>'+l.labels[4]+'</th>':'')+'</tr></thead><tbody>'+bkd.labels.map((lb,i)=>'<tr><td style="color:var(--muted);display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:2px;background:'+bkd.colors[i]+';flex-shrink:0;display:inline-block;"></span>'+lb+'</td><td>'+fmt2(bkd.jan[i])+'</td>'+(hasF?'<td>'+fmt2(bkd.fev[i])+'</td>':'')+(hasM?'<td>'+fmt2(bkd.mar[i])+'</td>':'')+(hasA?'<td>'+fmt2(bkd.abr?bkd.abr[i]:0)+'</td>':'')+(hasMai?'<td>'+fmt2(bkd.mai?bkd.mai[i]:0)+'</td>':'')+'</tr>').join('')+'<tr class="tr-tot"><td>Total</td><td>'+fmt2(tot.jan)+'</td>'+(hasF?'<td>'+fmt2(tot.fev)+'</td>':'')+(hasM?'<td>'+fmt2(tot.mar)+'</td>':'')+(hasA?'<td>'+fmt2(tot.abr||0)+'</td>':'')+(hasMai?'<td>'+fmt2(tot.mai||0)+'</td>':'')+'</tr></tbody></table>';document.getElementById('l3mBotWrap').classList.add('open');}}
 
 function showPage(id,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');btn.classList.add('active');if(id==='receita')renderPaceChart();}
 function showCtab(group,id,btn){const card=btn.closest('.card');card.querySelectorAll('.ctab-content').forEach(el=>el.classList.remove('active'));card.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));document.getElementById(group+'-'+id).classList.add('active');btn.classList.add('active');}
