@@ -445,14 +445,14 @@ async function carregarDoSupabase(mesStr) {
     _fromSupabase: true,
     visao:{
       metrics:[
-        {cls:'',label:'AUM Custódia',value:'—',note:'Aguardando consolidação'},
+        {cls:'',label:'AUM Custódia',value:'R$ 589,3MM',note:'Fechamento Abr/30'},
         {cls:'',label:'Receita Líquida',value:fmtK(recLiq),note:'Orçado: R$ 237K'},
         {cls:'',label:'Lucro Líquido',value:'—',note:'Aguardando custos'},
         {cls:'',label:'Margem Líquida',value:'—',note:'Aguardando custos'},
-        {cls:'',label:'ROA Consultoria',value:'—',note:'Aguardando AUM'},
+        {cls:'',label:'ROA Consultoria',value:'—',note:'Aguardando breakdown AUM'},
         {cls:'',label:'Caixa RTS',value:'—',note:'Aguardando consolidação'},
       ],
-      aumOrc:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],real:[567.4,582.0,583.6,612.9,null],orc:[575,597.5,621.1,675.1,null],noteText:'Mai/26: AUM aguardando consolidação.'},
+      aumOrc:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],real:[567.4,582.0,583.6,612.9,589.3],orc:[575,597.5,621.1,675.1,null],noteText:'Mai/26: R$589,3MM (fechamento 30/Abr · fonte: consolidação BTG).'},
       roa:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],real:[0.437,0.41,0.51,0.45,null],orc:[0.45,0.45,0.50,0.50,0.50]},
       recLuc:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],rec:[149.8,156.0,211.1,210.5,Math.round(recLiq/100)/10],luc:[72.6,73.9,126.4,113.9,null]},
       marg:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],real:[48.5,47.4,60.0,54.0,null],orc:[null,null,null,null,null],alertNote:'Mai/26: margem pendente — custos não importados.'},
