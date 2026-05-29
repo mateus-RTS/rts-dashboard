@@ -373,18 +373,49 @@ function badgeCls(pct){return pct>=100?'p-ok':pct>=60?'p-warn':'p-low';}
 const SB_URL = 'https://zjhaprbilpoypwpwwxih.supabase.co';
 const SB_KEY = 'sb_publishable__b6wXAjX79DSy2EFk_T9sA_Z0qjgqAh';
 
+// Dias Úteis por mês — fonte ANBIMA
+const DU_MAP_DB = {
+  '2025-01-01':22,'2025-02-01':20,'2025-03-01':19,'2025-04-01':20,'2025-05-01':21,
+  '2025-06-01':20,'2025-07-01':23,'2025-08-01':21,'2025-09-01':22,'2025-10-01':23,
+  '2025-11-01':19,'2025-12-01':22,
+  '2026-01-01':21,'2026-02-01':18,'2026-03-01':22,'2026-04-01':20,'2026-05-01':20,
+  '2026-06-01':21,'2026-07-01':23,'2026-08-01':21,'2026-09-01':21,'2026-10-01':21,
+  '2026-11-01':19,'2026-12-01':22,
+};
+
 async function carregarDoSupabase(mesStr) {
-  // mesStr = '2026-05-01' — lê receita_por_banker e dre views
+  // mesStr = '2026-05-01' — lê receita_por_banker, dre e dre_manual (AUM)
   const headers = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
 
-  const [rpbResp, dreResp] = await Promise.all([
+  const [rpbResp, dreResp, manualResp] = await Promise.all([
     fetch(`${SB_URL}/rest/v1/receita_por_banker?mes=eq.${mesStr}&order=banker`, {headers}),
     fetch(`${SB_URL}/rest/v1/dre?mes=eq.${mesStr}`, {headers}),
+    fetch(`${SB_URL}/rest/v1/dre_manual?metrica=like.aum*&mes=eq.${mesStr}&select=metrica,valor`, {headers}),
   ]);
 
-  const rpbRows = await rpbResp.json();
-  const dreRows = await dreResp.json();
+  const rpbRows    = await rpbResp.json();
+  const dreRows    = await dreResp.json();
+  const manualRows = await manualResp.json();
   const dre = dreRows[0] || {};
+
+  // AUM por banker (R$ MM) — vem do dre_manual
+  const aumData = {};
+  (Array.isArray(manualRows)?manualRows:[]).forEach(r => { aumData[r.metrica] = +r.valor / 1e6; });
+  const aumTotal = aumData.aum || null;
+  const aumByBk  = { DN:aumData.aum_dn||null, MJ:aumData.aum_mj||null, NC:aumData.aum_nc||null, RI:aumData.aum_ri||null };
+
+  // DU do mês
+  const du = DU_MAP_DB[mesStr] || null;
+
+  // ROA anualizado = (receita / DU) * 252 / AUM * 100
+  function calcROAStr(rec, aumMM) {
+    if (!rec || !aumMM || !du) return '—';
+    return ((rec / du * 252) / (aumMM * 1e6) * 100).toFixed(3) + '%';
+  }
+  function calcROANum(rec, aumMM) {
+    if (!rec || !aumMM || !du) return null;
+    return parseFloat(((rec / du * 252) / (aumMM * 1e6) * 100).toFixed(3));
+  }
 
   // Totais
   const consultoria = Math.round(rpbRows.reduce((s,r)=>s+parseFloat(r.consultoria||0),0));
@@ -404,15 +435,24 @@ async function carregarDoSupabase(mesStr) {
   rpbRows.forEach(r => { bkData[r.banker] = {consultoria:parseFloat(r.consultoria||0), cross:parseFloat(r.cross_sell||0), total:parseFloat(r.receita_total||0)}; });
 
   // bankerAll: linha por banker + Total
-  const bankerAll = rpbRows.map(r => ({
-    bk: r.banker,
-    consult: fmtFull(parseFloat(r.consultoria||0)),
-    du: '—',
-    cross: parseFloat(r.cross_sell||0) > 0 ? fmtFull(parseFloat(r.cross_sell||0)) : '—',
-    total: fmtFull(parseFloat(r.receita_total||0)),
-    var:'—', vc:'neu', roa:'—', roaBk:'—'
-  }));
-  bankerAll.push({bk:'Total',consult:fmtFull(consultoria),du:'—',cross:crossell>0?fmtFull(crossell):'—',total:fmtFull(recTotal),var:'—',vc:'neu',roa:'—',roaBk:'—',tot:true});
+  const bankerAll = rpbRows.map(r => {
+    const c = parseFloat(r.consultoria||0);
+    const t = parseFloat(r.receita_total||0);
+    const aumBkr = aumByBk[r.banker]||null;
+    return {
+      bk: r.banker,
+      consult: fmtFull(c),
+      du: (du && c) ? fmtFull(Math.round(c/du)) : '—',
+      cross: parseFloat(r.cross_sell||0) > 0 ? fmtFull(parseFloat(r.cross_sell||0)) : '—',
+      total: fmtFull(t),
+      var:'—', vc:'neu',
+      roa: calcROAStr(c, aumBkr),
+      roaBk: calcROAStr(t, aumBkr)
+    };
+  });
+  const roaTotConsult = calcROAStr(consultoria, aumTotal);
+  const consultDU = (du && consultoria) ? fmtFull(Math.round(consultoria/du)) : '—';
+  bankerAll.push({bk:'Total',consult:fmtFull(consultoria),du:consultDU,cross:crossell>0?fmtFull(crossell):'—',total:fmtFull(recTotal),var:'—',vc:'neu',roa:roaTotConsult,roaBk:calcROAStr(recTotal,aumTotal),tot:true});
 
   // bkTotals para YTD
   const bkTotalsYTD = {
@@ -449,7 +489,7 @@ async function carregarDoSupabase(mesStr) {
         {cls:'',label:'Receita Líquida',value:fmtK(recLiq),note:'Orçado: R$ 237K'},
         {cls:'',label:'Lucro Líquido',value:'—',note:'Aguardando custos'},
         {cls:'',label:'Margem Líquida',value:'—',note:'Aguardando custos'},
-        {cls:'',label:'ROA Consultoria',value:'—',note:'Aguardando breakdown AUM'},
+        {cls:calcROANum(consultoria,aumTotal)!=null?(calcROANum(consultoria,aumTotal)>=0.4?'mc-up':'mc-warn'):'',label:'ROA Consultoria',value:roaTotConsult,note:du?(du+' DU · AUM R$'+(aumTotal?aumTotal.toFixed(0):'?')+'M'):'Aguardando AUM/DU'},
         {cls:'',label:'Caixa RTS',value:'—',note:'Aguardando consolidação'},
       ],
       aumOrc:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],real:[567.4,582.0,583.6,612.9,589.3],orc:[575,597.5,621.1,675.1,null],noteText:'Mai/26: R$589,3MM (fechamento 30/Abr · fonte: consolidação BTG).'},
@@ -463,17 +503,17 @@ async function carregarDoSupabase(mesStr) {
         {cls:'',label:'Receita Total Mai',value:fmtK(recTotal),note:'Fonte: Supabase'},
         {cls:'',label:'Consultoria RTS',value:fmtK(consultoria),note:rpbRows.length+' bankers'},
         {cls:'',label:'Cross-sell AUGE',value:crossell>0?fmtK(crossell):'R$ 0',note:''},
-        {cls:'',label:'Receita / DU',value:'—',note:'Aguardando DU mai'},
+        {cls:(du&&consultoria)?'mc-up':'',label:'Receita / DU',value:(du&&consultoria)?'R$ '+Math.round(consultoria/du).toLocaleString('pt-BR'):'—',note:du?(du+' DU · só consultoria'):'Aguardando DU'},
         {cls:'',label:'Maior Receita Mai',value:maiorBk.banker||'—',note:maiorBk.receita_total?fmtFull(parseFloat(maiorBk.receita_total)):''},
       ],
       recRts:{labels:['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],consult:[158639,157117,164781,186349,consultoria],consultOrc:[168750,177188,206719,217055,227907],fin:[2880,1723,1694,1800,0],recTotOrc:[213850,229362,257977,270396,283332],recTotReal:[179000,178931,252255,251600,recTotal]},
-      du:{prev:{label:'Abr/26 — 22 DU',val:'R$ 8.470',sub:'consultoria / DU'},cur:{label:'Mai/26',val:'—',sub:'aguardando'},info:'Mai/26: dados parciais. Custos e DU pendentes.'},
+      du:{prev:{label:'Abr/26 — 22 DU',val:'R$ 8.470',sub:'consultoria / DU'},cur:{label:du?'Mai/26 — '+du+' DU':'Mai/26',val:(du&&consultoria)?'R$ '+Math.round(consultoria/du).toLocaleString('pt-BR'):'—',sub:'consultoria / DU',delta:(du&&consultoria)?(()=>{const prev=8470,cur=Math.round(consultoria/du),pct=((cur-prev)/prev*100).toFixed(1);return(pct>=0?'▲ +':'▼ ')+Math.abs(pct)+'% vs Abr/26';})():''},info:du?('Mai/26: '+du+' DU. Consultoria R$'+Math.round(consultoria/1000)+'K'+(du&&consultoria?' · Consult/DU R$'+Math.round(consultoria/du).toLocaleString('pt-BR'):'')+'. ROA anualizado: '+roaTotConsult):'Mai/26: DU pendente.'},
       charts:{consult:[158639,157117,164781,186349,consultoria],bkTotals:{dez:null,jan:52941,fev:59072,mar:54407,abr:80798},DN:{dez:null,jan:42778,fev:37124,mar:51428,abr:45798},NC:{dez:null,jan:35044,fev:33200,mar:48310,abr:26595},RI:{dez:null,jan:45416,fev:47812,mar:46416,abr:60894}},
       bankerAll,
       auge:{linhas:[{nome:'Cross-sell',cor:'#f0b429',jan:{},fev:{},mar:{},abr:{},mai:{total:crossell}}],prevLabel:'Abr/26',curLabel:'Mai/26'},
       tabBankers,
       tabHeaders:['Linha','Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'],
-      roaBanker:[{bk:'Total',v:'—'}]
+      roaBanker:rpbRows.map(r=>({bk:r.banker,v:calcROAStr(parseFloat(r.consultoria||0),aumByBk[r.banker])})).concat([{bk:'Total',v:roaTotConsult}])
     },
     custos:{
       metrics:[
@@ -490,18 +530,18 @@ async function carregarDoSupabase(mesStr) {
     },
     bankers:{
       metrics:[
-        {cls:'',label:'AUM Total RTS',value:'—',note:'Aguardando consolidação'},
+        {cls:aumTotal?'mc-up':'',label:'AUM Custódia',value:aumTotal?'R$ '+aumTotal.toFixed(0)+'MM':'—',note:aumTotal?'Fechamento Abr/30':'Aguardando consolidação'},
         {cls:'',label:'Total Clientes',value:'—',note:''},
         {cls:'',label:'Maior Receita Mai',value:maiorBk.banker||'—',note:maiorBk.receita_total?fmtFull(parseFloat(maiorBk.receita_total)):''},
-        {cls:'',label:'ROA Meta',value:'0,50%',note:'ROA aguardando AUM'},
+        {cls:'mc-warn',label:'ROA Meta',value:'0,50%',note:'ROA Consult Mai: '+roaTotConsult},
       ],
-      roaBanker:{labels:['DN','MJ','NC','RI'],prev:[0.420,0.600,0.240,0.530],prevLabel:'Abr/26',cur:[null,null,null,null],curLabel:'Mai/26'},
+      roaBanker:{labels:['DN','MJ','NC','RI'],prev:[0.420,0.600,0.240,0.530],prevLabel:'Abr/26',cur:['DN','MJ','NC','RI'].map(bk=>calcROANum(bkData[bk]?.consultoria||0,aumByBk[bk])),curLabel:'Mai/26'},
       clientTable:rpbRows.map(r=>{
-        const aumBk={DN:129.7,MJ:158.5,NC:132.6,RI:143.2}[r.banker];
-        const rec=parseFloat(r.receita_total||0);
-        const roa=aumBk?(rec/1000/aumBk*100).toFixed(3)+'%':'—';
-        return{bk:r.banker,cli:'—',aum:aumBk?'R$ '+aumBk.toFixed(0)+'M':'—',rpc:'—',roa,roaTot:'—'};
-      }).concat([{bk:'Total',cli:'—',aum:'R$ 564M',rpc:'—',roa:'—',roaTot:'—',tot:true}]),
+        const c=parseFloat(r.consultoria||0);
+        const t=parseFloat(r.receita_total||0);
+        const aumBkr=aumByBk[r.banker]||null;
+        return{bk:r.banker,cli:'—',aum:aumBkr?'R$ '+aumBkr.toFixed(0)+'M':'—',rpc:(du&&c)?'R$ '+Math.round(c/du).toLocaleString('pt-BR'):'—',roa:calcROAStr(c,aumBkr),roaTot:calcROAStr(t,aumBkr)};
+      }).concat([{bk:'Total',cli:'—',aum:aumTotal?'R$ '+aumTotal.toFixed(0)+'MM':'R$ 589M',rpc:consultDU,roa:roaTotConsult,roaTot:calcROAStr(recTotal,aumTotal),tot:true}]),
       clientNote:'Mai/26: AUM por banker — fechamento Abr/30 (BTG). Nº clientes pendente.',
       aumBanker:{labels:['DN','MJ','NC','RI'],data:[129.7,158.5,132.6,143.2]},
       l3m:{
