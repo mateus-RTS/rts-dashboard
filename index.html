@@ -496,9 +496,14 @@ async function carregarDoSupabase(mesStr) {
         {cls:'',label:'ROA Meta',value:'0,50%',note:'ROA aguardando AUM'},
       ],
       roaBanker:{labels:['DN','MJ','NC','RI'],prev:[0.420,0.600,0.240,0.530],prevLabel:'Abr/26',cur:[null,null,null,null],curLabel:'Mai/26'},
-      clientTable:rpbRows.map(r=>({bk:r.banker,cli:'—',aum:'—',rpc:'—',roa:'—',roaTot:'—'})).concat([{bk:'Total',cli:'—',aum:'—',rpc:'—',roa:'—',roaTot:'—',tot:true}]),
-      clientNote:'Mai/26: AUM e nº de clientes aguardando consolidação.',
-      aumBanker:{labels:['DN','MJ','NC','RI'],data:[null,null,null,null]},
+      clientTable:rpbRows.map(r=>{
+        const aumBk={DN:129.7,MJ:158.5,NC:132.6,RI:143.2}[r.banker];
+        const rec=parseFloat(r.receita_total||0);
+        const roa=aumBk?(rec/1000/aumBk*100).toFixed(3)+'%':'—';
+        return{bk:r.banker,cli:'—',aum:aumBk?'R$ '+aumBk.toFixed(0)+'M':'—',rpc:'—',roa,roaTot:'—'};
+      }).concat([{bk:'Total',cli:'—',aum:'R$ 564M',rpc:'—',roa:'—',roaTot:'—',tot:true}]),
+      clientNote:'Mai/26: AUM por banker — fechamento Abr/30 (BTG). Nº clientes pendente.',
+      aumBanker:{labels:['DN','MJ','NC','RI'],data:[129.7,158.5,132.6,143.2]},
       l3m:{
         bkColors:{DN:'#5a9e6f',MJ:'#3D754E',NC:'#60a5fa',RI:'#a3d9b1'},
         bkTotals:bkTotalsYTD,
